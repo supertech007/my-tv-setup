@@ -3,7 +3,10 @@ package com.mytvsetup.launcher.ui
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.Font
@@ -29,6 +32,7 @@ val WALLPAPERS = listOf(
 // Saturated enough to tell apart on a TV: the accent colours focus rings, selected chips and switches.
 val ACCENTS = mapOf("ice" to Color(0xFF8FD3FF), "mint" to Color(0xFF6EE7B7), "rose" to Color(0xFFFF8FB1), "gold" to Color(0xFFFFC94D))
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TvTheme(accent: String = "ice", content: @Composable () -> Unit) {
     val base = Typography()
@@ -38,6 +42,6 @@ fun TvTheme(accent: String = "ice", content: @Composable () -> Unit) {
             bodyLarge = base.bodyLarge.copy(fontFamily = Outfit),
             bodyMedium = base.bodyMedium.copy(fontFamily = Outfit),
             labelLarge = base.labelLarge.copy(fontFamily = Outfit)
-        ), content = content
-    )
+        )
+    ) { CompositionLocalProvider(LocalBringIntoViewSpec provides StillBringIntoViewSpec, content = content) }
 }

@@ -1,7 +1,6 @@
 package com.mytvsetup.launcher.ui
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,7 +30,7 @@ import androidx.compose.ui.unit.*
 import androidx.compose.ui.zIndex
 import kotlin.math.roundToInt
 
-const val TILE_LIFT = 1.04f
+const val TILE_LIFT = 1.08f
 
 val LocalGlassWallpaper = staticCompositionLocalOf<ImageBitmap?> { null }
 val LocalStageSize = staticCompositionLocalOf { IntSize(1920, 1080) }
@@ -41,11 +40,12 @@ fun GlassCard(modifier: Modifier, focused: Boolean, content: @Composable BoxScop
     val wallpaper = LocalGlassWallpaper.current
     val stage = LocalStageSize.current
     var origin by remember { mutableStateOf(IntOffset.Zero) }
+    val scale by animateFloatAsState(if (focused) 1.025f else 1f, label = "glass lift")
     val shape = RoundedCornerShape(44.dp)
     Box(modifier
         .zIndex(if (focused) 2f else 0f)
         .onGloballyPositioned { p -> p.positionInRoot().let { origin = IntOffset(it.x.roundToInt(), it.y.roundToInt()) } }
-        // Cards never zoom: growing a whole card made every icon in it jump. The accent border marks focus.
+        .graphicsLayer { scaleX = scale; scaleY = scale; shadowElevation = 0f; this.shape = shape }
         .border(if (focused) 3.dp else 1.5.dp, if (focused) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = .38f), shape)
         .clip(shape)
         .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }) {
@@ -72,8 +72,7 @@ fun ActionGlass(modifier: Modifier, onClick: () -> Unit, content: @Composable Bo
 @Composable
 fun FocusTile(modifier: Modifier = Modifier, radius: Int = 18, role: Role = Role.Button, onClick: () -> Unit, content: @Composable BoxScope.() -> Unit) {
     var focused by remember { mutableStateOf(false) }
-    // A small, quick lift: larger or slower zooms made rows look shaky while moving left and right.
-    val scale by animateFloatAsState(if (focused) TILE_LIFT else 1f, tween(110), label = "tile lift")
+    val scale by animateFloatAsState(if (focused) TILE_LIFT else 1f, label = "tile lift")
     val shape = RoundedCornerShape(radius.dp)
     Box(modifier.zIndex(if (focused) 3f else 0f).onFocusChanged { focused = it.isFocused }
         .graphicsLayer { scaleX = scale; scaleY = scale; shadowElevation = 0f; this.shape = shape }

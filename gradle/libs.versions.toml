@@ -1,0 +1,46 @@
+[versions]
+agp = "9.2.1"
+kotlin = "2.4.10"
+datastore = "1.3.0"
+serialization = "1.12.0"
+compose-bom = "2026.09.00"
+junit = "4.13.2"
+okhttp = "5.5.1"
+room = "2.8.5"
+ksp = "2.3.13"
+work = "2.12.0"
+robolectric = "4.17"
+activity = "1.13.0"
+coil = "2.7.0"
+roborazzi = "1.77.0"
+
+[libraries]
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
+datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
+compose-foundation = { module = "androidx.compose.foundation:foundation" }
+compose-material3 = { module = "androidx.compose.material3:material3" }
+compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
+junit = { module = "junit:junit", version.ref = "junit" }
+
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+mockwebserver = { module = "com.squareup.okhttp3:mockwebserver3", version.ref = "okhttp" }
+activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
+roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi" }
+compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
+compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }

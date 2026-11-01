@@ -1,0 +1,203 @@
+[
+  {
+    "id": "punjabi-hit-songs",
+    "name": "Punjabi Hits",
+    "lang": "pa",
+    "tags": [
+      "Pop",
+      "Hits"
+    ],
+    "links": {
+      "com.jio.media.jiobeats": "https://www.jiosaavn.com/featured/punjabi-hit-songs/T,w3Z-u7t6A_"
+    },
+    "search": "Punjabi Hits"
+  },
+  {
+    "id": "best-of-romance-punjabi",
+    "name": "Punjabi Romance",
+    "lang": "pa",
+    "tags": [
+      "Romance"
+    ],
+    "links": {
+      "com.jio.media.jiobeats": "https://www.jiosaavn.com/featured/best-of-romance-punjabi/s3X0s4hSgi-femJ68FuXsA__"
+    },
+    "search": "Punjabi Romance"
+  },
+  {
+    "id": "best-of-hip-hop-punjabi",
+    "name": "Punjabi Hip Hop",
+    "lang": "pa",
+    "tags": [
+      "Hip Hop"
+    ],
+    "links": {
+      "com.jio.media.jiobeats": "https://www.jiosaavn.com/featured/best-of-hip-hop-punjabi/RyrPgTZDukhuOxiEGmm6lQ__"
+    },
+    "search": "Punjabi Hip Hop"
+  },
+  {
+    "id": "urban-punjabi",
+    "name": "Urban Punjabi",
+    "lang": "pa",
+    "tags": [
+      "Pop",
+      "Dance"
+    ],
+    "links": {
+      "com.jio.media.jiobeats": "https://www.jiosaavn.com/featured/urban-punjabi/824zJaQOrYbuCJW60TJk1Q__"
+    },
+    "search": "Urban Punjabi"
+  },
+  {
+    "id": "chartbusters-2026-haryanvi",
+    "name": "Haryanvi Chartbusters",
+    "lang": "bgc",
+    "tags": [
+      "Hits",
+      "Pop"
+    ],
+    "links": {
+      "com.jio.media.jiobeats": "https://www.jiosaavn.com/featured/chartbusters-2026-haryanvi/cMmty07t9s,vz,QNANKgeg__"
+    },
+    "search": "Haryanvi Chartbusters"
+  },
+  {
+    "id": "best-of-romance-haryanvi",
+    "name": "Haryanvi Romance",
+    "lang": "bgc",
+    "tags": [
+      "Romance"
+    ],
+    "links": {
+      "com.jio.media.jiobeats": "https://www.jiosaavn.com/featured/best-of-romance-haryanvi/uRjRUlP4uzbbdh3Fl54,TQ__"
+    },
+    "search": "Haryanvi Romance"
+  },
+  {
+    "id": "lets-play-raju-punjabi",
+    "name": "Let’s Play Raju Punjabi",
+    "lang": "bgc",
+    "tags": [
+      "Dance",
+      "Folk"
+    ],
+    "links": {
+      "com.jio.media.jiobeats": "https://www.jiosaavn.com/featured/lets-play-raju-punjabi/NLllm5JVRY2O0eMLZZxqsA__"
+    },
+    "search": "Let’s Play Raju Punjabi"
+  },
+  {
+    "id": "lets-play-sapna-choudhary-",
+    "name": "Let’s Play Sapna Choudhary",
+    "lang": "bgc",
+    "tags": [
+      "Dance",
+      "Folk"
+    ],
+    "links": {
+      "com.jio.media.jiobeats": "https://www.jiosaavn.com/featured/lets-play-sapna-choudhary-/Ke5y5anwb35ieSJqt9HmOQ__"
+    },
+    "search": "Let’s Play Sapna Choudhary"
+  },
+  {
+    "id": "hindi-hit-songs",
+    "name": "Hindi Hits",
+    "lang": "hi",
+    "tags": [
+      "Pop",
+      "Hits"
+    ],
+    "links": {
+      "com.jio.media.jiobeats": "https://www.jiosaavn.com/featured/hindi-hit-songs/ZodsPn39CSjwxP8tCU-flw__"
+    },
+    "search": "Hindi Hits"
+  },
+  {
+    "id": "best-of-romance-hindi",
+    "name": "Hindi Romance",
+    "lang": "hi",
+    "tags": [
+      "Romance"
+    ],
+    "links": {
+      "com.jio.media.jiobeats": "https://www.jiosaavn.com/featured/best-of-romance-hindi/SBKnUgjNeMIwkg5tVhI3fw__"
+    },
+    "search": "Hindi Romance"
+  },
+  {
+    "id": "best-of-dance-hindi",
+    "name": "Hindi Dance",
+    "lang": "hi",
+    "tags": [
+      "Dance"
+    ],
+    "links": {
+      "com.jio.media.jiobeats": "https://www.jiosaavn.com/featured/best-of-dance-hindi/qVvfieICUY5ieSJqt9HmOQ__"
+    },
+    "search": "Hindi Dance"
+  },
+  {
+    "id": "best-of-90s-hindi",
+    "name": "Hindi 90s",
+    "lang": "hi",
+    "tags": [
+      "Retro",
+      "Bollywood"
+    ],
+    "links": {
+      "com.jio.media.jiobeats": "https://www.jiosaavn.com/featured/best-of-90s-hindi/j44dgfQrkXY_"
+    },
+    "search": "Hindi 90s"
+  },
+  {
+    "id": "essential-soft-pop",
+    "name": "Essential Soft Pop",
+    "lang": "en",
+    "tags": [
+      "Pop",
+      "Chill"
+    ],
+    "links": {
+      "com.jio.media.jiobeats": "https://www.jiosaavn.com/featured/essential-soft-pop/vw3rxyOhUs8_"
+    },
+    "search": "Essential Soft Pop"
+  },
+  {
+    "id": "fresh-rock-hits-english",
+    "name": "Fresh Rock Hits",
+    "lang": "en",
+    "tags": [
+      "Rock"
+    ],
+    "links": {
+      "com.jio.media.jiobeats": "https://www.jiosaavn.com/featured/fresh-rock-hits-english/LlG94Or10VVuOxiEGmm6lQ__"
+    },
+    "search": "Fresh Rock Hits"
+  },
+  {
+    "id": "drive-time-hip-hop",
+    "name": "Drive Time Hip Hop",
+    "lang": "en",
+    "tags": [
+      "Hip Hop"
+    ],
+    "links": {
+      "com.jio.media.jiobeats": "https://www.jiosaavn.com/featured/drive-time-hip-hop/-WeiPOsIS0oGSw2I1RxdhQ__"
+    },
+    "search": "Drive Time Hip Hop"
+  },
+  {
+    "id": "now-playing-pop",
+    "name": "Now Playing Pop",
+    "lang": "en",
+    "tags": [
+      "Pop",
+      "Hits"
+    ],
+    "links": {
+      "com.jio.media.jiobeats": "https://www.jiosaavn.com/featured/now-playing-pop/IQO11xk800E_"
+    },
+    "search": "Now Playing Pop"
+  }
+]

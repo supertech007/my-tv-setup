@@ -1,0 +1,9 @@
+.superpowers/
+.gradle/
+build/
+local.properties
+*.keystore
+secrets.properties
+.gradle-home/
+shots/
+.kotlin/

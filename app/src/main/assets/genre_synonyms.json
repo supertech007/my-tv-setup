@@ -1,0 +1,21 @@
+{
+  "Horror": ["horror", "paranormal", "supernatural", "ghost", "haunted house", "possession", "slasher", "zombie"],
+  "Mystery": ["mystery", "whodunit", "detective", "investigation"],
+  "Thriller": ["thriller", "psychological thriller", "suspense"],
+  "Sci-Fi": ["science-fiction", "science fiction", "sci-fi", "dystopia", "time travel"],
+  "Romance": ["romance", "love", "romantic comedy"],
+  "Crime": ["crime", "gangster", "heist", "police"],
+  "Action & Adventure": ["action", "adventure", "action & adventure"],
+  "Animation": ["animation"],
+  "Comedy": ["comedy"],
+  "Documentary": ["documentary"],
+  "Drama": ["drama"],
+  "Kids & Family": ["kids", "family", "kids & family"],
+  "Fantasy": ["fantasy"],
+  "History": ["history"],
+  "Music & Musical": ["music", "musical", "music & musical"],
+  "Reality TV": ["reality", "reality tv"],
+  "Sport": ["sport"],
+  "War & Military": ["war", "military", "war & military"],
+  "Western": ["western"]
+}

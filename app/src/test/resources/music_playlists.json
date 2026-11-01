@@ -1,0 +1,7 @@
+[
+  {"id":"pa","name":"Punjabi Hits","lang":"pa","tags":["Pop","Dance"],"links":{"com.jio.media.jiobeats":"https://www.jiosaavn.com/featured/punjabi-hit-songs/T,w3Z-u7t6A_","other.music":"https://example.com/punjabi"},"search":"Punjabi Hits"},
+  {"id":"bgc","name":"Haryanvi Beats","lang":"bgc","tags":["Folk"],"links":{},"search":"Haryanvi Beats"},
+  {"id":"hi","name":"Hindi Romance","lang":"hi","tags":["Romance"],"links":{},"search":"Hindi Romance"},
+  {"id":"en","name":"English Chill","lang":"en","tags":["Chill"],"links":{},"search":"English Chill"},
+  {"id":"ta","name":"Tamil Hits","lang":"ta","tags":["Tamil Only"],"links":{},"search":"Tamil Hits"}
+]

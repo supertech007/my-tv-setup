@@ -136,6 +136,7 @@ private fun MusicAppSettings(prefs: Prefs, installed: List<AppEntry>, update: ((
         SettingsAction("${app.label}${if (prefs.musicApp == app.pkg) " · Selected" else ""}", Modifier.fillMaxWidth(),
             selected = prefs.musicApp == app.pkg) { update { it.copy(musicApp = app.pkg) } }
     }
+    SettingsText("Amazon Music can't be sent to a playlist, so playlists picked here open in JioSaavn when it's installed.", muted = true)
     // Apple Music is always offered: when missing, its Play Store page shows whether this TV can install it.
     if (apps.none { it.pkg.startsWith(APPLE_MUSIC) }) {
         SettingsAction("Apple Music · not installed, get it", Modifier.fillMaxWidth()) {

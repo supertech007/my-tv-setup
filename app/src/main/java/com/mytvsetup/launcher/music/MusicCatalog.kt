@@ -90,6 +90,11 @@ class MusicCatalog(
 
     fun open(ctx: Context, p: Playlist, musicApp: String): LaunchResult {
         p.links[musicApp]?.let { return launcher.openUrlIn(ctx, musicApp, it, p.name) }
+        // Some apps (Amazon Music on Android TV) cannot be sent to a playlist; JioSaavn plays the one picked.
+        p.links[JIOSAAVN]?.let { url ->
+            val result = launcher.openUrlIn(ctx, JIOSAAVN, url, p.name)
+            if (result !is LaunchResult.NotInstalled) return result
+        }
         val search = Intent(Intent.ACTION_SEARCH).setPackage(musicApp)
             .putExtra(SearchManager.QUERY, p.search)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -103,6 +108,8 @@ class MusicCatalog(
         }
     }
 }
+
+private const val JIOSAAVN = "com.jio.media.jiobeats"
 
 /** Music stores Playlist.lang in originalLanguage and never fabricates streaming offers. */
 fun Playlist.toTitle(): Title = Title(

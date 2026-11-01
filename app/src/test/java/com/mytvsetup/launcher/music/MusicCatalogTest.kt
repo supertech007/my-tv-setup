@@ -90,11 +90,31 @@ class MusicCatalogTest {
         assertTrue(launcher.apps.isEmpty())
     }
 
-    @Test fun absentLinkSearchesOnlyTheSelectedAppWithTheExactQuery() {
+    @Test fun appsThatCannotOpenThePlaylistGetItInJioSaavn() {
+        // Amazon Music on Android TV ignores every playlist and search link (checked on the TV 1 Nov).
         val launcher = RecordingLauncher()
         val context = RecordingContext()
         assertEquals(LaunchResult.Ok, MusicCatalog(playlists, launcher = launcher)
             .open(context, punjabi, "com.amazon.music.tv"))
+        assertEquals(listOf("com.jio.media.jiobeats|https://www.jiosaavn.com/featured/punjabi-hit-songs/T,w3Z-u7t6A_|Punjabi Hits"),
+            launcher.urls)
+        assertTrue(context.intents.isEmpty())
+    }
+
+    @Test fun withoutJioSaavnTheChosenAppIsSearched() {
+        val launcher = RecordingLauncher(LaunchResult.NotInstalled("JioSaavn"))
+        val context = RecordingContext()
+        assertEquals(LaunchResult.Ok, MusicCatalog(playlists, launcher = launcher)
+            .open(context, punjabi, "com.amazon.music.tv"))
+        assertEquals("com.amazon.music.tv", context.intents.single().`package`)
+    }
+
+    @Test fun absentLinkSearchesOnlyTheSelectedAppWithTheExactQuery() {
+        val launcher = RecordingLauncher()
+        val context = RecordingContext()
+        val noLinks = punjabi.copy(links = emptyMap())
+        assertEquals(LaunchResult.Ok, MusicCatalog(playlists, launcher = launcher)
+            .open(context, noLinks, "com.amazon.music.tv"))
         val intent = context.intents.single()
         assertEquals(Intent.ACTION_SEARCH, intent.action)
         assertEquals("com.amazon.music.tv", intent.`package`)
@@ -108,7 +128,7 @@ class MusicCatalogTest {
         val launcher = RecordingLauncher(LaunchResult.NotInstalled("Punjabi Hits"))
         val context = RecordingContext(ActivityNotFoundException())
         assertEquals(LaunchResult.NotInstalled("Punjabi Hits"), MusicCatalog(playlists, launcher = launcher)
-            .open(context, punjabi, "missing.app"))
+            .open(context, punjabi.copy(links = emptyMap()), "missing.app"))
         assertEquals(listOf("missing.app|Punjabi Hits"), launcher.apps)
         assertEquals(Intent.ACTION_SEARCH, context.intents.single().action)
     }
@@ -116,7 +136,7 @@ class MusicCatalogTest {
     @Test fun inaccessibleSearchActivityAlsoFallsBackToOpenApp() {
         val launcher = RecordingLauncher()
         assertEquals(LaunchResult.Ok, MusicCatalog(playlists, launcher = launcher)
-            .open(RecordingContext(SecurityException()), punjabi, "locked.app"))
+            .open(RecordingContext(SecurityException()), punjabi.copy(links = emptyMap()), "locked.app"))
         assertEquals(listOf("locked.app|Punjabi Hits"), launcher.apps)
     }
 

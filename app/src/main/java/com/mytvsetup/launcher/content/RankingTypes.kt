@@ -7,7 +7,8 @@ data class Filters(
     val yearMin: Int? = null,
     val group: String? = null,
     val tag: String? = null,
-    val sort: Sort = Sort.IMDB
+    val sort: Sort = Sort.IMDB,
+    val lang: String? = null // null = all languages; audio for films and series, playlist language for music
 )
 
 internal val VIDEO_SERVICES = listOf("prv", "jhs", "snl", "zee", "atp")

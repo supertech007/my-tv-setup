@@ -29,7 +29,7 @@ fun BrowseScreen(source: HomeContentSource, imageLoader: ImageLoader, onPlay: (T
     }
     GlassCard(Modifier.offset(40.dp, 36.dp).size(1840.dp, 1008.dp), false) {
         Column(Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 30.dp)) {
-            ForYouFilters(source, onPersonalise, chipLimit = 14) {
+            ForYouFilters(source, onPersonalise, chipLimit = 14, languagesInHeader = true) {
                 Text("${titles.size} titles · Back to close", Modifier.padding(end = 12.dp), fontFamily = Outfit,
                     fontSize = 20.sp, color = Color.White.copy(alpha = .7f))
             }

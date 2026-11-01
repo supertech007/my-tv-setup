@@ -60,7 +60,8 @@ fun ForYouCard(source: HomeContentSource, imageLoader: ImageLoader, modifier: Mo
 
 /** The For you header: type tabs, then genre, year, sort, Personalise and the top genres. */
 @Composable
-fun ForYouFilters(source: HomeContentSource, onPersonalise: (Boolean) -> Unit, chipLimit: Int, lead: @Composable () -> Unit = {}) {
+fun ForYouFilters(source: HomeContentSource, onPersonalise: (Boolean) -> Unit, chipLimit: Int,
+                 languagesInHeader: Boolean = false, lead: @Composable () -> Unit = {}) {
     val groups by source.genreGroups.collectAsState(emptyList())
     val filters by source.filters.collectAsState()
     val personal by source.personalise.collectAsState()
@@ -74,6 +75,10 @@ fun ForYouFilters(source: HomeContentSource, onPersonalise: (Boolean) -> Unit, c
                 source.setFilters(filters.copy(kinds = kind?.let { setOf(it) } ?: emptySet()))
             }
         }
+        if (languagesInHeader) {
+            Box(Modifier.padding(horizontal = 8.dp).size(2.dp, 30.dp).background(Color.White.copy(alpha = .3f)))
+            LanguageChips(source, filters)
+        }
     }
     Spacer(Modifier.height(5.dp))
     // Room inside the scroll area so a focused chip, drawn 8% larger, is not clipped.
@@ -86,6 +91,7 @@ fun ForYouFilters(source: HomeContentSource, onPersonalise: (Boolean) -> Unit, c
             source.setFilters(filters.copy(sort = if (filters.sort == Sort.IMDB) Sort.NEWEST else Sort.IMDB))
         }
         PersonaliseSwitch(personal, onPersonalise)
+        if (!languagesInHeader) LanguageChips(source, filters)
         // The row is not lazy: show the top genres here; the picker lists the rest.
         groups.take(chipLimit).forEach { group ->
             Chip(group.name, filters.group == group.name) {
@@ -98,6 +104,15 @@ fun ForYouFilters(source: HomeContentSource, onPersonalise: (Boolean) -> Unit, c
     }
     Spacer(Modifier.height(5.dp))
     if (genresOpen) GenrePicker(groups, filters, exploreGroup, { source.setFilters(it) }) { genresOpen = false }
+}
+
+private val LANGUAGE_CHIPS = listOf(null to "All", "hi" to "Hindi", "en" to "English", "pa" to "Punjabi", "bgc" to "Haryanvi")
+
+@Composable
+private fun LanguageChips(source: HomeContentSource, filters: Filters) {
+    LANGUAGE_CHIPS.forEach { (code, name) ->
+        Chip(name, filters.lang == code) { source.setFilters(filters.copy(lang = code)) }
+    }
 }
 
 @Composable

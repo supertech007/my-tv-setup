@@ -48,6 +48,17 @@ class RankingTest {
         assertEquals(listOf(horror2024, comedy, horror), ranked(listOf(comedy, horror, horror2024), Filters(sort = Sort.NEWEST)))
     }
 
+    @Test fun languageFilterKeepsOnlyThatAudioOrPlaylistLanguage() {
+        val hindi = testTitle("hindi").copy(offers = listOf(Offer("prv", listOf("hi", "en"), "p")))
+        val punjabiMusic = testTitle("pa-music", kind = Kind.MUSIC).copy(offers = emptyList(), originalLanguage = "pa")
+        val all = listOf(comedy, hindi, punjabiMusic)
+        assertEquals(setOf("hindi"), ranked(all, Filters(lang = "hi"), personalise = false).map { it.id }.toSet())
+        assertEquals(setOf("comedy", "hindi"), ranked(all, Filters(lang = "en"), personalise = false).map { it.id }.toSet())
+        assertEquals(setOf("pa-music"), ranked(all, Filters(lang = "pa"), personalise = false).map { it.id }.toSet())
+        // All languages: no language filter.
+        assertEquals(3, ranked(all, Filters(lang = null), personalise = false).size)
+    }
+
     @Test fun imdbNullsLastWithoutTaste() {
         val unknown = testTitle("unknown", imdb = null)
         assertEquals(listOf(comedy, horror, unknown), ranked(listOf(unknown, horror, comedy), personalise = false))

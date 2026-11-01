@@ -11,6 +11,7 @@ fun rank(
             (f.yearMin == null || (t.year != null && t.year >= f.yearMin)) &&
             (f.group == null || f.group in genres.groupsOf(t.labels)) &&
             (f.tag == null || t.labels.any { genres.normalise(it) == genres.normalise(f.tag) }) &&
+            (f.lang == null || isAllowed(t, setOf(f.lang), VIDEO_SERVICES, setOf(f.lang))) &&
             (!personalise || t.id !in rejected)
     }
     // Score each title once; a selector inside the comparator would recompute features per comparison.

@@ -31,8 +31,8 @@ fun SettingsScreen(prefs: Prefs, installed: List<AppEntry>, onUpdate: ((Prefs) -
     val first = remember { FocusRequester() }
     BackHandler(switchBack) { switchBack = false }
     if (switchBack) {
-        SettingsPage("How to switch back to Projectivy", "Your TV, your choice.", { switchBack = false }) {
-            SettingsText("TV Settings → Apps → Default apps → Home app → Projectivy Launcher", 32)
+        SettingsPage("How to switch back to your old home screen", "Your TV, your choice.", { switchBack = false }) {
+            SettingsText("TV Settings → Apps → Default apps → Home app → your old launcher", 32)
             SettingsText("exact menu names may vary slightly", muted = true)
         }
         return
@@ -78,7 +78,10 @@ fun SettingsScreen(prefs: Prefs, installed: List<AppEntry>, onUpdate: ((Prefs) -
                         SettingsHeader("My TV", "A quiet home for everything you love to watch.")
                         SettingsText("Version ${BuildConfig.VERSION_NAME}", 32)
                         SettingsText("No ads. No analytics. No trackers.", muted = true)
-                        SettingsAction("How to switch back to Projectivy", Modifier.fillMaxWidth()) { switchBack = true }
+                        // TMDB's terms ask for this notice wherever its data is used.
+                        SettingsText("This product uses the TMDB API but is not endorsed or certified by TMDB.", muted = true)
+                        SettingsText("Catalogue from JustWatch. Playlists from JioSaavn.", muted = true)
+                        SettingsAction("How to switch back to your old home screen", Modifier.fillMaxWidth()) { switchBack = true }
                     }
                 }
             }

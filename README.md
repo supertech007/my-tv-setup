@@ -15,7 +15,18 @@ similar sticks. Kotlin and Jetpack Compose.
 - **Dock:** hold OK on an app to move it or take it off the dock.
 - **Settings:** name, city, wallpaper, accent colour, cards, dock, languages and music app.
 
-Catalogue data comes from JustWatch; TMDB (optional, free key) adds original language and keywords.
+## Data sources
+
+- **JustWatch:** the film and series catalogue, audio languages, IMDb scores and posters.
+- **TMDB** (optional, free key): original language and keywords.
+  This product uses the TMDB API but is not endorsed or certified by TMDB.
+- **JioSaavn:** featured playlists and cover art.
+- **Open-Meteo:** weather and city search.
+
+JustWatch and JioSaavn are read through the internal endpoints their own websites use. They are not official
+public APIs, have no guarantees and may change or stop working at any time; if titles or playlists stop
+loading, those endpoints have probably changed. This is a personal, non-commercial project and is not
+affiliated with any of these services or with the streaming apps it opens.
 
 ## Build and install
 
@@ -38,3 +49,8 @@ changed or removed.
 ```bash
 ./gradlew testDebugUnitTest
 ```
+
+## Licence
+
+MIT, see [LICENSE](LICENSE). Wallpapers and the Outfit font have their own licences, listed in
+[docs/credits.md](docs/credits.md).

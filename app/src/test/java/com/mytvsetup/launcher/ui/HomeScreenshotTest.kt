@@ -359,8 +359,8 @@ class HomeScreenshotTest {
     @Test fun switchBackIsInstructionalAndReturnsToSettings() {
         compose.runOnIdle { nav.push(Screen.Settings) }
         selectSection("About")
-        remoteClick("How to switch back to Projectivy")
-        assertTextFits("TV Settings → Apps → Default apps → Home app → Projectivy Launcher")
+        remoteClick("How to switch back to your old home screen")
+        assertTextFits("TV Settings → Apps → Default apps → Home app → your old launcher")
         compose.onNodeWithText("exact menu names may vary slightly").assertIsDisplayed()
         compose.onNodeWithText("Back to Settings").assertIsFocused()
         remoteClick("Back to Settings")

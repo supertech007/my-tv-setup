@@ -15,8 +15,9 @@ similar sticks. Kotlin and Jetpack Compose.
 - **Dock:** hold OK on an app to move it or take it off the dock; All apps, Screen off, Mute and Settings move too.
 - **Screen off (LG webOS TVs):** turns the TV picture off while music keeps playing; any button brings it back.
   The TV asks once to allow the device. Mute is a dock tile.
-- **Remote shortcuts:** hold Back for a second for screen off; hold Back and press Down to mute, Up to unmute.
-  To use them inside other apps, switch on "My TV remote shortcuts" in the TV's Accessibility settings.
+- **Quick menu:** hold Back for a second for Mute or Unmute and Screen off; arrows to move, OK to choose.
+  To use it inside other apps, switch on TV Settings → Device Preferences → Accessibility → Services →
+  "My TV remote shortcuts".
 - **Settings:** name, city, wallpaper, accent colour, cards, dock, languages and music app.
 
 ## Data sources

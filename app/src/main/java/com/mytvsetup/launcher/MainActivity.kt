@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.view.KeyEvent
 import com.mytvsetup.launcher.audio.MuteKeyService
+import com.mytvsetup.launcher.audio.QuickMenuChoice
+import com.mytvsetup.launcher.audio.QuickMenuView
 import com.mytvsetup.launcher.audio.RemoteShortcuts
 import com.mytvsetup.launcher.ui.Screen
 import com.mytvsetup.launcher.audio.Mute
@@ -49,20 +51,36 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() { unregisterReceiver(packageReceiver); super.onDestroy() }
 
     private val shortcuts = RemoteShortcuts()
+    private var menu: QuickMenuView? = null
 
-    // The remote shortcuts work inside the launcher even when the accessibility helper is off.
+    // The hold-Back quick menu works inside the launcher even when the accessibility helper is off.
     // Screen off opens the black page, which itself brings the picture back on the next button.
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (MuteKeyService.running) return super.dispatchKeyEvent(event)
         val action = shortcuts.onKey(event.keyCode, event.action == KeyEvent.ACTION_DOWN, event.repeatCount,
-            event.eventTime, event.downTime)
+            event.eventTime, event.downTime, event.isLongPress)
         when (action) {
-            RemoteShortcuts.Action.MUTE -> Mute.mute(this)
-            RemoteShortcuts.Action.UNMUTE -> Mute.unmute(this)
-            RemoteShortcuts.Action.SCREEN_OFF -> { shortcuts.screenIsOff = false; nav.push(Screen.ScreenOff) }
+            RemoteShortcuts.Action.OPEN_MENU -> {
+                closeMenu()
+                menu = QuickMenuView(this).also {
+                    it.show(Mute.isMuted(this), 0)
+                    (window.decorView as android.view.ViewGroup).addView(it)
+                }
+            }
+            RemoteShortcuts.Action.MOVE -> menu?.show(Mute.isMuted(this), shortcuts.selected)
+            RemoteShortcuts.Action.CLOSE_MENU -> closeMenu()
+            RemoteShortcuts.Action.CHOOSE -> {
+                closeMenu()
+                QuickMenuChoice.choose(this, shortcuts.selected) { nav.push(Screen.ScreenOff) }
+            }
             else -> Unit
         }
         return action != RemoteShortcuts.Action.PASS || super.dispatchKeyEvent(event)
+    }
+
+    private fun closeMenu() {
+        menu?.let { (window.decorView as android.view.ViewGroup).removeView(it) }
+        menu = null
     }
 
     override fun onNewIntent(intent: Intent) {

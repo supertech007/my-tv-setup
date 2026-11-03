@@ -3,21 +3,25 @@ package com.mytvsetup.launcher.audio
 import android.view.KeyEvent
 
 /**
- * Remote shortcuts built on Back, because the stick sends the volume buttons straight to the TV over HDMI and
- * no app can see them, and holding an arrow is how lists scroll fast:
- * hold Back about a second to switch the TV screen off (the next button brings it back), and while holding Back
- * press Down to mute or Up to unmute. A short Back stays a normal Back. Pure logic, shared by the launcher and
- * the accessibility helper that sees buttons in other apps.
+ * One-hand remote shortcuts. The stick sends the volume buttons straight to the TV over HDMI (no app sees them),
+ * holding an arrow scrolls lists, and the Mi remote cannot be pressed two-handed comfortably, so everything starts
+ * from Back: hold it about a second to open a small quick menu (Mute or Unmute, Screen off), move with the arrows,
+ * choose with OK, close with Back. A short Back stays a normal Back. While the screen is off, the next button only
+ * brings the picture back. Pure logic, shared by the launcher and the accessibility helper for other apps.
  */
-class RemoteShortcuts(private val holdMs: Long = 800) {
-    enum class Action { PASS, CONSUME, MUTE, UNMUTE, SCREEN_OFF, SCREEN_ON }
+class RemoteShortcuts(val holdMs: Long = 800, private val items: Int = 2) {
+    enum class Action { PASS, CONSUME, OPEN_MENU, MOVE, CHOOSE, CLOSE_MENU, SCREEN_ON }
 
     var screenIsOff = false
+    var menuOpen = false
+        private set
+    var selected = 0
+        private set
     private var swallowUntilUp: Int? = null
-    private var backHeld = false
     private var backUsed = false
+    private var backDown = false
 
-    fun onKey(keyCode: Int, isDown: Boolean, repeat: Int, eventTime: Long, downTime: Long): Action {
+    fun onKey(keyCode: Int, isDown: Boolean, repeat: Int, eventTime: Long, downTime: Long, longPress: Boolean = false): Action {
         swallowUntilUp?.let { held ->
             if (keyCode == held) { if (!isDown) swallowUntilUp = null; return Action.CONSUME }
         }
@@ -26,22 +30,40 @@ class RemoteShortcuts(private val holdMs: Long = 800) {
             swallowUntilUp = keyCode
             return Action.SCREEN_ON
         }
-        if (keyCode == KeyEvent.KEYCODE_BACK) return onBack(isDown, repeat, eventTime - downTime)
-        if (backHeld && isDown && repeat == 0 &&
-            (keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_DPAD_UP)) {
-            backUsed = true
-            swallowUntilUp = keyCode
-            return if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) Action.MUTE else Action.UNMUTE
+        if (menuOpen) return onMenu(keyCode, isDown)
+        if (keyCode != KeyEvent.KEYCODE_BACK) return Action.PASS
+        // Apps act on Back when it is released, so the press goes through and only the release is held back
+        // once the hold has opened the menu.
+        return when {
+            isDown && repeat == 0 -> { backUsed = false; backDown = true; Action.PASS }
+            // Android flags a long press itself on some remotes; otherwise time the hold.
+            isDown && !backUsed && (longPress || eventTime - downTime >= holdMs) -> {
+                backUsed = true; menuOpen = true; selected = 0; Action.OPEN_MENU
+            }
+            isDown -> Action.CONSUME
+            else -> { backDown = false; if (backUsed) Action.CONSUME else Action.PASS }
         }
-        return Action.PASS
     }
 
-    // Apps act on Back when it is released, so the press goes through and only the release is held back once
-    // Back has been used for a shortcut.
-    private fun onBack(isDown: Boolean, repeat: Int, heldMs: Long): Action = when {
-        isDown && repeat == 0 -> { backHeld = true; backUsed = false; Action.PASS }
-        isDown && !backUsed && heldMs >= holdMs -> { backUsed = true; screenIsOff = true; Action.SCREEN_OFF }
-        isDown -> Action.CONSUME
-        else -> { backHeld = false; if (backUsed) Action.CONSUME else Action.PASS }
+    /**
+     * Called [holdMs] after Back went down. An accessibility helper sees only press and release, never Android's
+     * repeat signals for a held button, so it times the hold itself and asks here whether Back is still down.
+     */
+    fun onBackHoldTimer(): Action =
+        if (backDown && !backUsed && !menuOpen) { backUsed = true; menuOpen = true; selected = 0; Action.OPEN_MENU }
+        else Action.PASS
+
+    private fun onMenu(keyCode: Int, isDown: Boolean): Action {
+        if (!isDown) return Action.CONSUME
+        swallowUntilUp = keyCode
+        return when (keyCode) {
+            KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_RIGHT -> { selected = (selected + 1) % items; Action.MOVE }
+            KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_LEFT -> { selected = (selected + items - 1) % items; Action.MOVE }
+            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER -> {
+                menuOpen = false; Action.CHOOSE
+            }
+            KeyEvent.KEYCODE_BACK -> { menuOpen = false; Action.CLOSE_MENU }
+            else -> Action.CONSUME
+        }
     }
 }

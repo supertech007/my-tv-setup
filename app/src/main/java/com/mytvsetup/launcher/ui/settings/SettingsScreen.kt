@@ -83,13 +83,9 @@ fun SettingsScreen(prefs: Prefs, installed: List<AppEntry>, onUpdate: ((Prefs) -
                         // TMDB's terms ask for this notice wherever its data is used.
                         SettingsText("This product uses the TMDB API but is not endorsed or certified by TMDB.", muted = true)
                         SettingsText("Catalogue from JustWatch. Playlists from JioSaavn.", muted = true)
-                        SettingsText("Remote shortcuts: hold Back for a second to switch the screen off (any button " +
-                            "brings it back). Hold Back and press Down to mute, or Up to unmute. For these to work inside " +
-                            "other apps too, switch on \"My TV remote shortcuts\" in the TV's Accessibility settings.", muted = true)
-                        SettingsAction("Open the TV's Accessibility settings", Modifier.fillMaxWidth()) {
-                            runCatching { context.startActivity(Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
-                        }
+                        SettingsText("Quick menu: hold Back for a second for Mute or Unmute and Screen off. Move with " +
+                            "the arrows, OK to choose, Back to close. To use it inside other apps too, switch on " +
+                            "TV Settings → Device Preferences → Accessibility → Services → My TV remote shortcuts.", muted = true)
                         SettingsAction("How to switch back to your old home screen", Modifier.fillMaxWidth()) { switchBack = true }
                     }
                 }

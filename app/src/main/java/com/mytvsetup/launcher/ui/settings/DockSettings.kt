@@ -27,7 +27,8 @@ internal fun DockSettings(prefs: Prefs, installed: List<AppEntry>, update: ((Pre
                     if (held != app.pkg || event.key !in listOf(Key.DirectionLeft, Key.DirectionRight)) false
                     else {
                         if (event.type == KeyEventType.KeyDown) update { current ->
-                            val order = dockApps(installed, current.dockOrder, emptySet()).map { it.pkg }
+                            // Keep the dock shortcuts where they were moved to.
+                            val order = dockIds(dockApps(installed, current.dockOrder, emptySet()).map { it.pkg }, current.dockOrder)
                             current.copy(dockOrder = moveInDock(order, app.pkg, if (event.key == Key.DirectionLeft) -1 else 1))
                         }
                         true

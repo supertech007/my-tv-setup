@@ -28,6 +28,7 @@ fun SettingsScreen(prefs: Prefs, installed: List<AppEntry>, onUpdate: ((Prefs) -
     var confirmReset by remember { mutableStateOf(false) }
     var switchBack by remember { mutableStateOf(false) }
     var resetDone by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     val first = remember { FocusRequester() }
     BackHandler(switchBack) { switchBack = false }
     if (switchBack) {
@@ -81,6 +82,13 @@ fun SettingsScreen(prefs: Prefs, installed: List<AppEntry>, onUpdate: ((Prefs) -
                         // TMDB's terms ask for this notice wherever its data is used.
                         SettingsText("This product uses the TMDB API but is not endorsed or certified by TMDB.", muted = true)
                         SettingsText("Catalogue from JustWatch. Playlists from JioSaavn.", muted = true)
+                        SettingsText("Remote shortcuts: hold Back for a second to switch the screen off (any button " +
+                            "brings it back). Hold Back and press Down to mute, or Up to unmute. For these to work inside " +
+                            "other apps too, switch on \"My TV remote shortcuts\" in the TV's Accessibility settings.", muted = true)
+                        SettingsAction("Open the TV's Accessibility settings", Modifier.fillMaxWidth()) {
+                            runCatching { context.startActivity(Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                        }
                         SettingsAction("How to switch back to your old home screen", Modifier.fillMaxWidth()) { switchBack = true }
                     }
                 }

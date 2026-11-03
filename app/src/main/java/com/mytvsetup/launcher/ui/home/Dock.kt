@@ -28,61 +28,88 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.mytvsetup.launcher.settings.moveInDock
+import com.mytvsetup.launcher.audio.Mute
+import kotlinx.coroutines.delay
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun Dock(installed: List<AppEntry>, prefs: Prefs, modifier: Modifier, onApp: (AppEntry) -> Unit, onAllApps: () -> Unit,
-         onSettings: () -> Unit, update: ((Prefs) -> Prefs) -> Unit = {}) {
+         onSettings: () -> Unit, update: ((Prefs) -> Prefs) -> Unit = {}, onScreenOff: () -> Unit = {}) {
+    val context = LocalContext.current
     var focused by remember { mutableStateOf(false) }
-    // Hold OK on an app to edit it in place: ◀ / ▶ move it, ✕ takes it off the dock (Settings brings it back).
+    // The Mute tile names what pressing it will do; mute can also change from the remote, so keep checking.
+    var muted by remember { mutableStateOf(Mute.isMuted(context)) }
+    LaunchedEffect(Unit) { while (true) { muted = Mute.isMuted(context); delay(1_000) } }
+    // Hold OK on any item to edit it in place: ◀ / ▶ move it; apps also get ✕ to leave the dock (Settings brings
+    // them back). All apps, Screen off and Settings move but never leave: they are the ways into those screens.
     var editing by remember { mutableStateOf<String?>(null) }
     val apps = remember(installed, prefs.dockOrder, prefs.hiddenApps) { dockApps(installed, prefs.dockOrder, prefs.hiddenApps) }
+    val byId = remember(apps) { apps.associateBy { it.pkg } }
+    val ids = remember(apps, prefs.dockOrder) { dockIds(apps.map { it.pkg }, prefs.dockOrder) }
     BackHandler(editing != null) { editing = null }
-    fun move(pkg: String, delta: Int) = update { current ->
-        current.copy(dockOrder = moveInDock(dockApps(installed, current.dockOrder, current.hiddenApps).map { it.pkg }, pkg, delta))
+    fun move(id: String, delta: Int) = update { current ->
+        current.copy(dockOrder = moveInDock(
+            dockIds(dockApps(installed, current.dockOrder, current.hiddenApps).map { it.pkg }, current.dockOrder), id, delta))
     }
     GlassCard(modifier.onFocusChanged { focused = it.hasFocus }, focused) {
         LazyRow(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 44.dp, vertical = 53.dp),
             horizontalArrangement = Arrangement.spacedBy(30.dp), verticalAlignment = Alignment.CenterVertically) {
-            items(apps, key = { it.pkg }) { app ->
-                val isEditing = editing == app.pkg
-                val tile = remember { FocusRequester() }
-                val remove = remember { FocusRequester() }
-                var wasEditing by remember { mutableStateOf(false) }
-                // Finishing an edit returns focus to the app's tile instead of letting it fall elsewhere.
-                LaunchedEffect(isEditing) {
-                    runCatching { if (isEditing) remove.requestFocus() else if (wasEditing) tile.requestFocus() }
-                    wasEditing = isEditing
+            items(ids, key = { it }) { id ->
+                val app = byId[id]
+                val (label, open) = when (id) {
+                    ALL_APPS -> "All apps" to onAllApps
+                    SCREEN_OFF -> "Screen off" to onScreenOff
+                    MUTE -> (if (muted) "Unmute" else "Mute") to { Mute.toggle(context); muted = !muted }
+                    SETTINGS -> "Settings" to onSettings
+                    else -> app!!.label to { onApp(app) }
                 }
-                Box(Modifier.size(250.dp, 150.dp)) {
-                    RemoteTile(Modifier.fillMaxSize().focusRequester(tile).focusProperties { canFocus = !isEditing },
-                        onClick = { onApp(app) }, onHold = { editing = app.pkg }) {
-                        DockArt(app)
-                        if (isEditing) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .55f)))
-                    }
-                    if (isEditing) {
-                        EditButton("◀", "Move ${app.label} left", Modifier.align(Alignment.CenterStart).padding(start = 12.dp)) { move(app.pkg, -1) }
-                        EditButton("✕", "Remove ${app.label} from the dock", Modifier.align(Alignment.TopCenter).padding(top = 10.dp)
-                            .focusRequester(remove)) { editing = null; update { it.copy(hiddenApps = it.hiddenApps + app.pkg) } }
-                        EditButton("▶", "Move ${app.label} right", Modifier.align(Alignment.CenterEnd).padding(end = 12.dp)) { move(app.pkg, 1) }
-                        Text("Back = done", Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp), fontFamily = Outfit,
-                            fontSize = 17.sp, color = Color.White)
-                    }
+                DockItem(id, label, width = if (app != null) 250 else 170, editing = editing == id,
+                    removable = app != null, focused = focused, onOpen = open, onHold = { editing = id },
+                    onMove = { move(id, it) },
+                    onRemove = { editing = null; update { it.copy(hiddenApps = it.hiddenApps + id) } }) {
+                    if (app != null) DockArt(app) else ShortcutArt(id, label, muted)
                 }
             }
-            item { DockShortcut("▦", "All apps", onAllApps) }
-            item { DockShortcut("⚙", "Settings", onSettings) }
         }
     }
 }
 
 @Composable
-private fun DockShortcut(icon: String, label: String, action: () -> Unit) {
-    FocusTile(Modifier.size(170.dp, 150.dp), radius = 30, onClick = action) {
-        Column(Modifier.fillMaxSize().background(Color.White.copy(alpha = .12f)),
-            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Text(icon, fontSize = 50.sp, color = Color.White)
-            Text(label, fontFamily = Outfit, fontSize = 22.sp, color = Color.White)
+private fun DockItem(id: String, label: String, width: Int, editing: Boolean, removable: Boolean, focused: Boolean,
+                     onOpen: () -> Unit, onHold: () -> Unit, onMove: (Int) -> Unit, onRemove: () -> Unit,
+                     art: @Composable BoxScope.() -> Unit) {
+    val tile = remember { FocusRequester() }
+    val first = remember { FocusRequester() }
+    var wasEditing by remember { mutableStateOf(false) }
+    // Finishing an edit returns focus to the tile instead of letting it fall elsewhere.
+    LaunchedEffect(editing) {
+        runCatching { if (editing) first.requestFocus() else if (wasEditing) tile.requestFocus() }
+        wasEditing = editing
+    }
+    Box(Modifier.size(width.dp, 150.dp)) {
+        RemoteTile(Modifier.fillMaxSize().focusRequester(tile).focusProperties { canFocus = !editing },
+            onClick = onOpen, onHold = onHold) {
+            art()
+            if (editing) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .55f)))
         }
+        if (editing) {
+            EditButton("◀", "Move $label left", Modifier.align(Alignment.CenterStart).padding(start = 10.dp)
+                .then(if (removable) Modifier else Modifier.focusRequester(first))) { onMove(-1) }
+            if (removable) EditButton("✕", "Remove $label from the dock", Modifier.align(Alignment.TopCenter)
+                .padding(top = 10.dp).focusRequester(first)) { onRemove() }
+            EditButton("▶", "Move $label right", Modifier.align(Alignment.CenterEnd).padding(end = 10.dp)) { onMove(1) }
+            Text("Back = done", Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp), fontFamily = Outfit,
+                fontSize = 17.sp, color = Color.White)
+        }
+    }
+}
+
+@Composable
+private fun BoxScope.ShortcutArt(id: String, label: String, muted: Boolean) {
+    Column(Modifier.fillMaxSize().background(Color.White.copy(alpha = .12f)),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Text(when (id) { ALL_APPS -> "▦"; SCREEN_OFF -> "☾"; MUTE -> if (muted) "🔊" else "🔇"; else -> "⚙" }, fontSize = 50.sp, color = Color.White)
+        Text(label, fontFamily = Outfit, fontSize = 22.sp, color = Color.White)
     }
 }
 

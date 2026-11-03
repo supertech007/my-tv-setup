@@ -51,12 +51,17 @@ fun HomeScreen(prefs: Prefs, source: HomeContentSource, installed: List<AppEntry
     fun card(id: String) = id == "clock" || id == "dock" || id !in hidden
     // Coordinates are the approved 1920×1080 design, uniformly scaled by the shell.
     fun at(x: Int, y: Int, w: Int, h: Int) = Modifier.offset(x.dp, y.dp).size(w.dp, h.dp)
+    // Hidden cards leave no hole: the rest grow into their space.
+    val layout = homeLayout(setOf("foryou", "swipe", "music", "jarvis", "youtube").filterTo(mutableSetOf()) {
+        card(it) && (it != "foryou" || card("forYou"))
+    })
+    fun box(id: String) = layout.getValue(id).let { at(it.x, it.y, it.w, it.h) }
     if (card("clock")) ClockCard(prefs, at(80, 72, 700, 640)) { nav.push(Screen.Settings) }
-    if (card("foryou") && card("forYou")) ForYouCard(source, imageLoader, at(830, 72, 760, 400), onPlay, onPersonalise) { nav.push(Screen.Browse) }
-    if (card("swipe")) SwipeCard(source, imageLoader, at(1620, 72, 220, 400)) { nav.push(Screen.Swipe) }
-    if (card("music")) MusicCard(at(830, 502, 320, 210), featured, imageLoader) { onMusic() }
+    if (card("foryou") && card("forYou")) ForYouCard(source, imageLoader, box("foryou"), onPlay, onPersonalise) { nav.push(Screen.Browse) }
+    if (card("swipe")) SwipeCard(source, imageLoader, box("swipe")) { nav.push(Screen.Swipe) }
+    if (card("music")) MusicCard(box("music"), featured, imageLoader) { onMusic() }
     val context = LocalContext.current
-    if (card("jarvis")) JarvisCard(installed.mapTo(mutableSetOf()) { it.pkg }, at(1170, 502, 360, 210)) { assistant ->
+    if (card("jarvis")) JarvisCard(installed.mapTo(mutableSetOf()) { it.pkg }, box("jarvis")) { assistant ->
         when (val route = jarvisRoute(assistant, installed.mapTo(mutableSetOf()) { it.pkg })) {
             is JarvisRoute.App -> onApp(route.pkg, assistant.name)
             is JarvisRoute.Web -> nav.push(Screen.Assistant(assistant.name))
@@ -65,9 +70,9 @@ fun HomeScreen(prefs: Prefs, source: HomeContentSource, installed: List<AppEntry
             }.onFailure { Toast.makeText(context, "Google Assistant isn't available on this TV", Toast.LENGTH_LONG).show() }
         }
     }
-    if (card("youtube")) YouTubeCard(at(1550, 502, 290, 210), latestVideo, imageLoader) { nav.push(Screen.YouTube(null)) }
+    if (card("youtube")) YouTubeCard(box("youtube"), latestVideo, imageLoader) { nav.push(Screen.YouTube(null)) }
     if (card("dock")) Dock(installed, prefs, at(80, 752, 1760, 256), { onApp(it.pkg, it.label) },
-        { nav.push(Screen.AllApps) }, { nav.push(Screen.Settings) }, onPrefs)
+        { nav.push(Screen.AllApps) }, { nav.push(Screen.Settings) }, onPrefs) { nav.push(Screen.ScreenOff) }
 }
 
 @Composable
@@ -125,6 +130,7 @@ fun TvApp(nav: Nav, prefsRepository: PrefsRepository, source: HomeContentSource,
                 Screen.Swipe -> SwipeRoute(source, images, nav)
                 is Screen.Assistant -> ASSISTANTS.firstOrNull { it.name == screen.name }?.webUrl
                     ?.let { AssistantScreen(screen.name, it) { nav.back() } } ?: nav.back()
+                Screen.ScreenOff -> ScreenOffScreen { nav.back() }
                 Screen.Browse -> BrowseScreen(source, images, play) { on -> source.setPersonalise(on) }
                 is Screen.YouTube -> YouTubeScreen({ nav.back() }, { nav.push(Screen.Accounts) }, youTube)
             }

@@ -11,3 +11,6 @@ Outfit by Rodrigo Fuenzalida, SIL Open Font License 1.1: https://github.com/goog
 
 Debug-only title metadata and artwork URLs: one JustWatch `popularTitles` IN query, 1 November 2026. Posters use images.justwatch.com s332 WebP; backdrops s1440 WebP. Artwork belongs to its respective rights holders and is fetched from JustWatch only.
 Weather data: Open-Meteo (https://open-meteo.com/), CC BY 4.0.
+
+The LG webOS pairing manifest (`app/src/main/assets/lg_pairing.json`) comes from
+[lgtv2](https://github.com/hobbyquaker/lgtv2) by hobbyquaker, MIT License.

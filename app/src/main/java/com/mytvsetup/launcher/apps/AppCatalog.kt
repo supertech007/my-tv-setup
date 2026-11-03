@@ -71,3 +71,17 @@ private fun Drawable.toImageBitmap(maxWidth: Int, maxHeight: Int): ImageBitmap {
     }
     return bitmap.asImageBitmap()
 }
+
+const val ALL_APPS = "@all-apps"
+const val SCREEN_OFF = "@screen-off"
+const val SETTINGS = "@settings"
+const val MUTE = "@mute"
+/** Launcher shortcuts that sit in the dock and move like apps (they cannot be removed). */
+val DOCK_SHORTCUTS = listOf(ALL_APPS, SCREEN_OFF, MUTE, SETTINGS)
+
+/** Dock ids in display order: [appIds] (already ordered by [dockApps]) and the shortcuts, each where [order] puts it. */
+fun dockIds(appIds: List<String>, order: List<String>): List<String> {
+    val known = (appIds + DOCK_SHORTCUTS).toSet()
+    val placed = order.distinct().filter { it in known }
+    return placed + appIds.filterNot { it in placed } + DOCK_SHORTCUTS.filterNot { it in placed }
+}

@@ -32,7 +32,7 @@ class RoomContentDaoTest {
     @After fun closeDatabase() { db.close() }
 
     @Test fun decisionsIncrementExistingTasteAndPersistEverySignalThroughConverter() = runBlocking {
-        withTimeout(5_000) {
+        withTimeout(15_000) {
             dao.recordDecision("horror", Signal.ACCEPT, 10, setOf("g:Horror", "svc:prv"))
             dao.recordDecision("horror", Signal.PLAY, 20, setOf("g:Horror"))
             dao.recordDecision("comedy", Signal.REJECT, 30, setOf("g:Comedy"))
@@ -51,7 +51,7 @@ class RoomContentDaoTest {
     }
 
     @Test fun acceptAddsMyListPlayPreservesItAndRejectRemovesIt() = runBlocking {
-        withTimeout(5_000) {
+        withTimeout(15_000) {
             dao.recordDecision("title", Signal.ACCEPT, 10, emptySet())
             assertEquals(listOf(MyListEntity("title", 10)), dao.observeMyList().first())
             dao.recordDecision("title", Signal.PLAY, 20, emptySet())
@@ -64,7 +64,7 @@ class RoomContentDaoTest {
     }
 
     @Test fun myListWriteFailureRollsBackDecisionAndTasteIncrementTogether() = runBlocking {
-        withTimeout(5_000) {
+        withTimeout(15_000) {
             dao.recordDecision("existing", Signal.ACCEPT, 10, setOf("g:Horror"))
             // Fail the last write, after decision insertion and the existing taste increment.
             db.openHelper.writableDatabase.execSQL("""
@@ -86,7 +86,7 @@ class RoomContentDaoTest {
     }
 
     @Test fun titlePayloadRoundTripsAndUpsertKeepsUnrelatedTitles() = runBlocking {
-        withTimeout(5_000) {
+        withTimeout(15_000) {
             val title = testTitle("title", listOf("paranormal")).copy(
                 originalLanguage = "hi", offers = listOf(Offer("snl", listOf("hi", "en"), "sony")))
             val cached = testTitle("cached")

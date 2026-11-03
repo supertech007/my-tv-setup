@@ -2,6 +2,11 @@ package com.mytvsetup.launcher
 
 import android.content.Context
 import android.content.Intent
+import android.view.KeyEvent
+import com.mytvsetup.launcher.audio.MuteKeyService
+import com.mytvsetup.launcher.audio.RemoteShortcuts
+import com.mytvsetup.launcher.ui.Screen
+import com.mytvsetup.launcher.audio.Mute
 import android.os.Bundle
 import android.view.View
 import androidx.activity.ComponentActivity
@@ -42,6 +47,23 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() { unregisterReceiver(packageReceiver); super.onDestroy() }
+
+    private val shortcuts = RemoteShortcuts()
+
+    // The remote shortcuts work inside the launcher even when the accessibility helper is off.
+    // Screen off opens the black page, which itself brings the picture back on the next button.
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (MuteKeyService.running) return super.dispatchKeyEvent(event)
+        val action = shortcuts.onKey(event.keyCode, event.action == KeyEvent.ACTION_DOWN, event.repeatCount,
+            event.eventTime, event.downTime)
+        when (action) {
+            RemoteShortcuts.Action.MUTE -> Mute.mute(this)
+            RemoteShortcuts.Action.UNMUTE -> Mute.unmute(this)
+            RemoteShortcuts.Action.SCREEN_OFF -> { shortcuts.screenIsOff = false; nav.push(Screen.ScreenOff) }
+            else -> Unit
+        }
+        return action != RemoteShortcuts.Action.PASS || super.dispatchKeyEvent(event)
+    }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)

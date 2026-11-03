@@ -12,7 +12,11 @@ similar sticks. Kotlin and Jetpack Compose.
 - **Swipe:** right accepts, left rejects, OK plays.
 - **Music:** JioSaavn featured playlists in the languages you choose.
 - **Direct play:** JioHotstar and Prime Video titles start playing straight away where the app allows it.
-- **Dock:** hold OK on an app to move it or take it off the dock.
+- **Dock:** hold OK on an app to move it or take it off the dock; All apps, Screen off, Mute and Settings move too.
+- **Screen off (LG webOS TVs):** turns the TV picture off while music keeps playing; any button brings it back.
+  The TV asks once to allow the device. Mute is a dock tile.
+- **Remote shortcuts:** hold Back for a second for screen off; hold Back and press Down to mute, Up to unmute.
+  To use them inside other apps, switch on "My TV remote shortcuts" in the TV's Accessibility settings.
 - **Settings:** name, city, wallpaper, accent colour, cards, dock, languages and music app.
 
 ## Data sources

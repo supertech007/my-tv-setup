@@ -54,6 +54,10 @@ changed or removed.
 ./gradlew testDebugUnitTest
 ```
 
+## Author
+
+Built by Mohan Minda · Shiv Shakti Software Solutions.
+
 ## Licence
 
 MIT, see [LICENSE](LICENSE). Wallpapers and the Outfit font have their own licences, listed in

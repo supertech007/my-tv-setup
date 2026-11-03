@@ -78,6 +78,7 @@ fun SettingsScreen(prefs: Prefs, installed: List<AppEntry>, onUpdate: ((Prefs) -
                     "About" -> {
                         SettingsHeader("My TV", "A quiet home for everything you love to watch.")
                         SettingsText("Version ${BuildConfig.VERSION_NAME}", 32)
+                        SettingsText("Built by Mohan Minda · Shiv Shakti Software Solutions", 26)
                         SettingsText("No ads. No analytics. No trackers.", muted = true)
                         // TMDB's terms ask for this notice wherever its data is used.
                         SettingsText("This product uses the TMDB API but is not endorsed or certified by TMDB.", muted = true)

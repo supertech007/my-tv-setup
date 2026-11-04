@@ -7,3 +7,4 @@ secrets.properties
 .gradle-home/
 shots/
 .kotlin/
+.DS_Store

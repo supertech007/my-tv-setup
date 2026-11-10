@@ -26,6 +26,12 @@ class NowPlayingListener : NotificationListenerService() {
     private var sessions: MediaSessionManager? = null
     private val onSessions = MediaSessionManager.OnActiveSessionsChangedListener { follow(it.orEmpty()) }
     private var lastKey: String? = null
+    private val players = mutableMapOf<MediaSession, PlayerState>()
+    private var awake: android.os.PowerManager.WakeLock? = null
+    // Re-checks while something is paused, so the three-hour limit ends even without a new player event.
+    private val recheck = object : Runnable {
+        override fun run() { updateAwake(); handler.postDelayed(this, 5 * 60_000L) }
+    }
 
     override fun onListenerConnected() {
         val manager = getSystemService(MediaSessionManager::class.java) ?: return
@@ -35,26 +41,55 @@ class NowPlayingListener : NotificationListenerService() {
             manager.addOnActiveSessionsChangedListener(onSessions, me, handler)
             follow(manager.getActiveSessions(me))
         }
+        handler.post(recheck)
     }
 
     override fun onListenerDisconnected() {
         runCatching { sessions?.removeOnActiveSessionsChangedListener(onSessions) }
         watched.forEach { (session, callback) -> session.controller.unregisterCallback(callback) }
         watched.clear()
+        players.clear()
+        handler.removeCallbacks(recheck)
+        updateAwake()
     }
 
     private fun follow(controllers: List<MediaController>) {
         val current = controllers.filter { it.packageName != packageName }.associateBy { MediaSession(it.sessionToken, it) }
-        (watched.keys - current.keys).forEach { session -> watched.remove(session)?.let(session.controller::unregisterCallback) }
+        (watched.keys - current.keys).forEach { session ->
+            watched.remove(session)?.let(session.controller::unregisterCallback)
+            players.remove(session)
+        }
         (current.keys - watched.keys).forEach { session ->
             val callback = object : MediaController.Callback() {
-                override fun onPlaybackStateChanged(state: PlaybackState?) = check(session.controller)
+                override fun onPlaybackStateChanged(state: PlaybackState?) { track(session); check(session.controller) }
                 override fun onMetadataChanged(metadata: MediaMetadata?) = check(session.controller)
             }
             session.controller.registerCallback(callback, handler)
             watched[session] = callback
+            track(session)
             check(session.controller)
         }
+        updateAwake()
+    }
+
+    private fun track(session: MediaSession) {
+        val state = session.controller.playbackState?.state
+        val before = players[session]
+        players[session] = PlayerState(session.controller.packageName,
+            playing = state == PlaybackState.STATE_PLAYING || state == PlaybackState.STATE_BUFFERING,
+            pausedSince = if (state == PlaybackState.STATE_PAUSED) before?.pausedSince ?: android.os.SystemClock.elapsedRealtime() else null)
+        updateAwake()
+    }
+
+    /** Holds the screen on (no screensaver) while [keepScreenAwake] says so; renewed by [recheck]. */
+    @Suppress("DEPRECATION")
+    private fun updateAwake() {
+        val keep = keepScreenAwake(players.values.toList(), android.os.SystemClock.elapsedRealtime())
+        if (keep) {
+            val lock = awake ?: getSystemService(android.os.PowerManager::class.java)
+                .newWakeLock(android.os.PowerManager.SCREEN_DIM_WAKE_LOCK, "MyTV:video").also { it.setReferenceCounted(false); awake = it }
+            lock.acquire(10 * 60_000L)
+        } else awake?.takeIf { it.isHeld }?.release()
     }
 
     /** Records once per title while it plays; pausing and resuming the same thing adds nothing. */

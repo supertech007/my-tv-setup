@@ -2,7 +2,7 @@ package com.mytvsetup.launcher.history
 
 private const val SMARTTUBE = "org.smarttube.stable"
 private val YOUTUBE_APPS = setOf(SMARTTUBE, "com.google.android.youtube.tv", "com.google.android.youtube.tvkids")
-private val MUSIC_APPS = setOf("com.jio.media.jiobeats", "com.amazon.music.tv", "com.spotify.tv.android",
+internal val MUSIC_APPS = setOf("com.jio.media.jiobeats", "com.amazon.music.tv", "com.spotify.tv.android",
     "com.google.android.youtube.tvmusic", "com.apple.android.music", "com.apple.android.music.tv")
 private val YOUTUBE_ID = Regex("^[A-Za-z0-9_-]{11}$")
 

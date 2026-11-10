@@ -123,3 +123,22 @@ class NowPlayingTest {
         assertEquals("https://watch/1", h.entries.value.single().url)
     }
 }
+
+class KeepAwakeTest {
+    private val hotstar = "in.startv.hotstar"
+
+    @Test fun aPlayingVideoKeepsTheScreenAwake() =
+        assertTrue(keepScreenAwake(listOf(PlayerState(hotstar, playing = true, pausedSince = null)), 0))
+
+    @Test fun aPausedVideoKeepsItAwakeForThreeHoursThenLetsTheScreensaverIn() {
+        val paused = listOf(PlayerState(hotstar, playing = false, pausedSince = 1_000))
+        assertTrue(keepScreenAwake(paused, 1_000 + PAUSED_AWAKE_MS - 1))
+        assertFalse(keepScreenAwake(paused, 1_000 + PAUSED_AWAKE_MS))
+    }
+
+    @Test fun musicAndStoppedPlayersDoNot() {
+        assertFalse(keepScreenAwake(listOf(PlayerState("com.jio.media.jiobeats", playing = true, pausedSince = null)), 0))
+        assertFalse(keepScreenAwake(listOf(PlayerState(hotstar, playing = false, pausedSince = null)), 0))
+        assertFalse(keepScreenAwake(emptyList(), 0))
+    }
+}

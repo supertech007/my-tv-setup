@@ -34,14 +34,15 @@ import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun Dock(installed: List<AppEntry>, prefs: Prefs, modifier: Modifier, onApp: (AppEntry) -> Unit, onAllApps: () -> Unit,
-         onSettings: () -> Unit, update: ((Prefs) -> Prefs) -> Unit = {}, onScreenOff: () -> Unit = {}) {
+         onSettings: () -> Unit, update: ((Prefs) -> Prefs) -> Unit = {}, onScreenOff: () -> Unit = {},
+         onHistory: () -> Unit = {}) {
     val context = LocalContext.current
     var focused by remember { mutableStateOf(false) }
     // The Mute tile names what pressing it will do; mute can also change from the remote, so keep checking.
     var muted by remember { mutableStateOf(Mute.isMuted(context)) }
     LaunchedEffect(Unit) { while (true) { muted = Mute.isMuted(context); delay(1_000) } }
     // Hold OK on any item to edit it in place: ◀ / ▶ move it; apps also get ✕ to leave the dock (Settings brings
-    // them back). All apps, Screen off and Settings move but never leave: they are the ways into those screens.
+    // them back). All apps, History, Screen off and Settings move but never leave: they are the ways into those screens.
     var editing by remember { mutableStateOf<String?>(null) }
     val apps = remember(installed, prefs.dockOrder, prefs.hiddenApps) { dockApps(installed, prefs.dockOrder, prefs.hiddenApps) }
     val byId = remember(apps) { apps.associateBy { it.pkg } }
@@ -58,6 +59,7 @@ fun Dock(installed: List<AppEntry>, prefs: Prefs, modifier: Modifier, onApp: (Ap
                 val app = byId[id]
                 val (label, open) = when (id) {
                     ALL_APPS -> "All apps" to onAllApps
+                    HISTORY -> "History" to onHistory
                     SCREEN_OFF -> "Screen off" to onScreenOff
                     MUTE -> (if (muted) "Unmute" else "Mute") to { Mute.toggle(context); muted = !muted }
                     SETTINGS -> "Settings" to onSettings
@@ -108,7 +110,7 @@ private fun DockItem(id: String, label: String, width: Int, editing: Boolean, re
 private fun BoxScope.ShortcutArt(id: String, label: String, muted: Boolean) {
     Column(Modifier.fillMaxSize().background(Color.White.copy(alpha = .12f)),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Text(when (id) { ALL_APPS -> "▦"; SCREEN_OFF -> "☾"; MUTE -> if (muted) "🔊" else "🔇"; else -> "⚙" }, fontSize = 50.sp, color = Color.White)
+        Text(when (id) { ALL_APPS -> "▦"; HISTORY -> "↺"; SCREEN_OFF -> "☾"; MUTE -> if (muted) "🔊" else "🔇"; else -> "⚙" }, fontSize = 50.sp, color = Color.White)
         Text(label, fontFamily = Outfit, fontSize = 22.sp, color = Color.White)
     }
 }

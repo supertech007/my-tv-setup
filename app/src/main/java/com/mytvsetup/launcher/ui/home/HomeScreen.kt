@@ -1,5 +1,9 @@
 package com.mytvsetup.launcher.ui.home
 
+import com.mytvsetup.launcher.history.*
+import com.mytvsetup.launcher.ui.history.HistoryScreen
+import com.mytvsetup.launcher.ui.swipe.serviceLabel
+
 import android.content.Intent
 import android.widget.Toast
 import com.mytvsetup.launcher.ai.*
@@ -72,7 +76,7 @@ fun HomeScreen(prefs: Prefs, source: HomeContentSource, installed: List<AppEntry
     }
     if (card("youtube")) YouTubeCard(box("youtube"), latestVideo, imageLoader) { nav.push(Screen.YouTube(null)) }
     if (card("dock")) Dock(installed, prefs, at(80, 752, 1760, 256), { onApp(it.pkg, it.label) },
-        { nav.push(Screen.AllApps) }, { nav.push(Screen.Settings) }, onPrefs) { nav.push(Screen.ScreenOff) }
+        { nav.push(Screen.AllApps) }, { nav.push(Screen.Settings) }, onPrefs, { nav.push(Screen.ScreenOff) }) { nav.push(Screen.History) }
 }
 
 @Composable
@@ -97,20 +101,39 @@ fun TvApp(nav: Nav, prefsRepository: PrefsRepository, source: HomeContentSource,
         if (result is LaunchResult.NotInstalled) Toast.makeText(context,
             "${result.label} isn't installed on this TV yet", Toast.LENGTH_LONG).show()
     }
-    fun openApp(pkg: String, label: String) { feedback(Launcher.openApp(context, pkg, label)) }
+    val history = remember { ContentRuntime.history(context) }
+    LaunchedEffect(prefs.historyDays) {
+        history.keepDays = prefs.historyDays
+        withContext(Dispatchers.IO) { history.prune(prefs.historyDays) }
+    }
+    fun launched(result: LaunchResult, entry: HistoryEntry) {
+        feedback(result)
+        if (result == LaunchResult.Ok) scope.launch(Dispatchers.IO) { history.record(entry) }
+    }
+    fun openApp(pkg: String, label: String) = launched(Launcher.openApp(context, pkg, label), appHistoryEntry(pkg, label))
+    fun openPlaylist(playlist: Playlist) =
+        launched(music.open(context, playlist, prefs.musicApp), playlist.historyEntry(prefs.musicApp))
+    fun reopen(entry: HistoryEntry) = when {
+        entry.kind == HistoryKind.MUSIC -> playlists.firstOrNull { it.id == entry.ref }?.let(::openPlaylist)
+            ?: openApp(entry.pkg, entry.name)
+        entry.url != null -> launched(Launcher.openUrlIn(context, entry.pkg, entry.url, entry.detail,
+            fresh = entry.pkg == "com.amazon.amazonvideo.livingroom"), entry)
+        else -> openApp(entry.pkg, entry.name)
+    }
     val play: (Title) -> Unit = play@{ title ->
         if (title.kind == Kind.MUSIC) {
             val playlist = music.forLangs(prefs.musicLangs).firstOrNull { it.id == title.id.removePrefix("music:") }
-            if (playlist != null) feedback(music.open(context, playlist, prefs.musicApp))
+            if (playlist != null) openPlaylist(playlist)
             return@play
         }
         val servicePackages = mapOf("prv" to "com.amazon.amazonvideo.livingroom", "jhs" to "in.startv.hotstar",
             "snl" to "com.sonyliv", "zee" to "com.graymatrix.did", "atp" to "com.apple.atve.androidtv.appletv")
         val offer = title.offers.firstOrNull { o -> o.service in servicePackages && (o.audio.any { it in prefs.videoLangs } || (o.audio.isEmpty() && title.originalLanguage in prefs.videoLangs)) }
         if (offer != null) {
-            val result = Launcher.openUrlIn(context, servicePackages.getValue(offer.service),
-                playUrl(offer.service, offer.url), serviceName(offer.service), fresh = needsFreshStart(offer.service))
-            feedback(result)
+            val pkg = servicePackages.getValue(offer.service)
+            val url = playUrl(offer.service, offer.url)
+            val result = Launcher.openUrlIn(context, pkg, url, serviceName(offer.service), fresh = needsFreshStart(offer.service))
+            launched(result, title.historyEntry(pkg, url, serviceLabel(offer.service)))
             if (result == LaunchResult.Ok) scope.launch { source.decide(title, Signal.PLAY) }
         } else Toast.makeText(context, "No confirmed Hindi or English offer available", Toast.LENGTH_LONG).show()
     }
@@ -118,7 +141,7 @@ fun TvApp(nav: Nav, prefsRepository: PrefsRepository, source: HomeContentSource,
         WallpaperStage(prefs.wallpaper) {
             when (val screen = stack.last()) {
                 Screen.Home -> HomeScreen(prefs, source, installed, images, nav, play, ::openApp, featured,
-                    videos.firstOrNull(), { featured?.let { feedback(music.open(context, it, prefs.musicApp)) } },
+                    videos.firstOrNull(), { featured?.let { openPlaylist(it) } },
                     { on -> source.setPersonalise(on) }, // the repository persists it
                     { update -> scope.launch { prefsRepository.update(update) } })
                 Screen.Settings -> SettingsScreen(prefs, installed,
@@ -131,6 +154,7 @@ fun TvApp(nav: Nav, prefsRepository: PrefsRepository, source: HomeContentSource,
                 is Screen.Assistant -> ASSISTANTS.firstOrNull { it.name == screen.name }?.webUrl
                     ?.let { AssistantScreen(screen.name, it) { nav.back() } } ?: nav.back()
                 Screen.ScreenOff -> ScreenOffScreen { nav.back() }
+                Screen.History -> HistoryScreen(history, prefs.historyDays, images, { reopen(it) }) { nav.back() }
                 Screen.Browse -> BrowseScreen(source, images, play) { on -> source.setPersonalise(on) }
                 is Screen.YouTube -> YouTubeScreen({ nav.back() }, { nav.push(Screen.Accounts) }, youTube)
             }
@@ -179,9 +203,15 @@ private fun SwipeRoute(source: HomeContentSource, images: ImageLoader, nav: Nav)
     // Swipe sets its own filters; give Home back the ones that were set.
     val homeFilters = remember(source) { source.filters.value }
     DisposableEffect(source) { onDispose { source.setFilters(homeFilters) } }
+    val history = remember { ContentRuntime.history(context) }
+    var swiping: SwipeViewModel? = null
     val viewModel = remember(source) { SwipeViewModel(source,
         SwipeLauncher { pkg, url, label ->
-        Launcher.openUrlIn(context, pkg, url, label, fresh = pkg == "com.amazon.amazonvideo.livingroom") },
+        Launcher.openUrlIn(context, pkg, url, label, fresh = pkg == "com.amazon.amazonvideo.livingroom").also { result ->
+            val title = swiping?.state?.value?.current
+            if (result == LaunchResult.Ok && title != null) scope.launch(Dispatchers.IO) { history.record(title.historyEntry(pkg, url, label)) }
+        } },
         (source as? ContentRepository)?.tasteSummary ?: defaultTasteSummary(source), scope) }
+    swiping = viewModel
     SwipeScreen(viewModel, images) { nav.back() }
 }

@@ -17,8 +17,11 @@ import com.mytvsetup.launcher.BuildConfig
 import com.mytvsetup.launcher.apps.AppEntry
 import com.mytvsetup.launcher.settings.Prefs
 import com.mytvsetup.launcher.ui.*
+import com.mytvsetup.launcher.content.ContentRuntime
+import com.mytvsetup.launcher.history.KEEP_DAY_CHOICES
+import com.mytvsetup.launcher.history.keepDaysLabel
 
-private val sections = listOf("Profile", "Look", "Home cards", "Dock", "Languages", "Music app", "For you", "Accounts", "About")
+private val sections = listOf("Profile", "Look", "Home cards", "Dock", "Languages", "Music app", "For you", "History", "Accounts", "About")
 
 @Composable
 fun SettingsScreen(prefs: Prefs, installed: List<AppEntry>, onUpdate: ((Prefs) -> Prefs) -> Unit,
@@ -28,6 +31,8 @@ fun SettingsScreen(prefs: Prefs, installed: List<AppEntry>, onUpdate: ((Prefs) -
     var confirmReset by remember { mutableStateOf(false) }
     var switchBack by remember { mutableStateOf(false) }
     var resetDone by remember { mutableStateOf(false) }
+    var confirmClear by remember { mutableStateOf(false) }
+    var cleared by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val first = remember { FocusRequester() }
     BackHandler(switchBack) { switchBack = false }
@@ -71,6 +76,7 @@ fun SettingsScreen(prefs: Prefs, installed: List<AppEntry>, onUpdate: ((Prefs) -
                         SettingsText("Start fresh by clearing your learned likes, dislikes and play signals.", muted = true)
                         if (resetDone) SettingsText("Learned taste reset.")
                     }
+                    "History" -> HistorySettings(prefs, onUpdate) { confirmClear = true }
                     "Accounts" -> {
                         SettingsHeader("Make it personal.", "Manage the accounts behind your YouTube cards.")
                         SettingsAction("YouTube accounts", Modifier.fillMaxWidth(), onClick = onAccounts)
@@ -94,7 +100,25 @@ fun SettingsScreen(prefs: Prefs, installed: List<AppEntry>, onUpdate: ((Prefs) -
     }
     if (confirmReset) SettingsDialog("Reset learned taste?", "Your learned likes, dislikes and play signals will be cleared.",
         "Reset taste", { confirmReset = false }) { onResetTaste(); confirmReset = false; resetDone = true }
+    if (confirmClear) SettingsDialog("Clear history?", "Everything in your My TV history will be removed.",
+        "Clear history", { confirmClear = false }) {
+        Thread { ContentRuntime.history(context).clear() }.start(); confirmClear = false; cleared = true
+    }
+    if (cleared) LaunchedEffect(Unit) { Toast.makeText(context, "History cleared", Toast.LENGTH_SHORT).show(); cleared = false }
     LaunchedEffect(Unit) { first.requestFocus() }
+}
+
+@Composable
+private fun HistorySettings(prefs: Prefs, update: ((Prefs) -> Prefs) -> Unit, onClear: () -> Unit) {
+    SettingsHeader("What you watched.", "Everything you open from My TV, kept as long as you choose.")
+    Label("Keep history for")
+    KEEP_DAY_CHOICES.forEach { days ->
+        SettingsAction("${keepDaysLabel(days)}${if (prefs.historyDays == days) " · Selected" else ""}", Modifier.fillMaxWidth(),
+            selected = prefs.historyDays == days) { update { it.copy(historyDays = days) } }
+    }
+    SettingsText("Older entries are removed automatically. Find History on the dock.", muted = true)
+    Spacer(Modifier.height(28.dp))
+    SettingsAction("Clear history", Modifier.width(480.dp), onClick = onClear)
 }
 
 @Composable

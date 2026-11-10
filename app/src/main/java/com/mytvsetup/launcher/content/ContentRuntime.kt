@@ -29,6 +29,14 @@ object ContentRuntime {
             store = context.applicationContext.filesDir.resolve("jiosaavn_playlists.json")).also { musicInstance = it }
     }
 
+    @Volatile private var historyInstance: com.mytvsetup.launcher.history.WatchHistory? = null
+
+    /** One watch history for the whole app: Home, YouTube and Swipe all add to it. */
+    fun history(context: Context): com.mytvsetup.launcher.history.WatchHistory = historyInstance ?: synchronized(this) {
+        historyInstance ?: com.mytvsetup.launcher.history.WatchHistory(context.applicationContext.filesDir.resolve("watch_history.json"))
+            .also { historyInstance = it }
+    }
+
     suspend fun refreshMusic(context: Context): Boolean = music(context).refresh(JioSaavnClient(http)::featured)
 
     private fun create(context: Context): ContentRepository {

@@ -29,7 +29,8 @@ data class Prefs(
     val videoLangs: Set<String> = setOf("hi", "en"),
     val musicLangs: Set<String> = setOf("pa", "bgc", "hi", "en"),
     val musicApp: String = "com.jio.media.jiobeats",
-    val hiddenYtAccounts: Set<String> = emptySet()
+    val hiddenYtAccounts: Set<String> = emptySet(),
+    val historyDays: Int = com.mytvsetup.launcher.history.DEFAULT_KEEP_DAYS
 )
 
 fun moveInDock(order: List<String>, pkg: String, delta: Int): List<String> {

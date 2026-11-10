@@ -11,6 +11,7 @@ sealed interface Screen {
     data object AllApps : Screen
     data object Browse : Screen
     data object ScreenOff : Screen
+    data object History : Screen
     data class Assistant(val name: String) : Screen
     data object Accounts : Screen
     data class YouTube(val accountId: String?) : Screen

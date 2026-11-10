@@ -1,5 +1,7 @@
 package com.mytvsetup.launcher.ui.youtube
 
+import com.mytvsetup.launcher.content.ContentRuntime
+import com.mytvsetup.launcher.history.historyEntry
 import androidx.compose.foundation.layout.PaddingValues
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -91,6 +93,7 @@ fun YouTubeScreen(onBack: () -> Unit, onAccounts: () -> Unit = {}, runtime: YouT
                         val result = Launcher.openUrlIn(context, "org.smarttube.stable",
                             "https://www.youtube.com/watch?v=${video.id}", "SmartTube")
                         if (result is LaunchResult.NotInstalled) Toast.makeText(context, "SmartTube is not installed", Toast.LENGTH_SHORT).show()
+                        if (result == LaunchResult.Ok) Thread { ContentRuntime.history(context).record(video.historyEntry()) }.start()
                     }, Modifier.fillMaxWidth())
                 }
             }

@@ -73,5 +73,14 @@
             </intent-filter>
             <meta-data android:name="android.accessibilityservice" android:resource="@xml/mute_service" />
         </service>
+        <service
+            android:name=".history.NowPlayingListener"
+            android:exported="true"
+            android:label="@string/now_playing_label"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

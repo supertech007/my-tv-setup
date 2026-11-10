@@ -110,7 +110,8 @@ fun TvApp(nav: Nav, prefsRepository: PrefsRepository, source: HomeContentSource,
         feedback(result)
         if (result == LaunchResult.Ok) scope.launch(Dispatchers.IO) { history.record(entry) }
     }
-    fun openApp(pkg: String, label: String) = launched(Launcher.openApp(context, pkg, label), appHistoryEntry(pkg, label))
+    // Opening an app alone is not history: what plays inside it is recorded by NowPlayingListener.
+    fun openApp(pkg: String, label: String) = feedback(Launcher.openApp(context, pkg, label))
     fun openPlaylist(playlist: Playlist) =
         launched(music.open(context, playlist, prefs.musicApp), playlist.historyEntry(prefs.musicApp))
     fun reopen(entry: HistoryEntry) = when {
@@ -154,7 +155,7 @@ fun TvApp(nav: Nav, prefsRepository: PrefsRepository, source: HomeContentSource,
                 is Screen.Assistant -> ASSISTANTS.firstOrNull { it.name == screen.name }?.webUrl
                     ?.let { AssistantScreen(screen.name, it) { nav.back() } } ?: nav.back()
                 Screen.ScreenOff -> ScreenOffScreen { nav.back() }
-                Screen.History -> HistoryScreen(history, prefs.historyDays, images, { reopen(it) }) { nav.back() }
+                Screen.History -> HistoryScreen(history, prefs.historyDays, images, NowPlayingListener.isAllowed(context), { reopen(it) }) { nav.back() }
                 Screen.Browse -> BrowseScreen(source, images, play) { on -> source.setPersonalise(on) }
                 is Screen.YouTube -> YouTubeScreen({ nav.back() }, { nav.push(Screen.Accounts) }, youTube)
             }

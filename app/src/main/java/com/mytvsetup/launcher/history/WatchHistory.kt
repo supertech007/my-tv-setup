@@ -13,7 +13,7 @@ const val DEFAULT_KEEP_DAYS = 90
 val KEEP_DAY_CHOICES = listOf(7, 30, 90, 365, FOREVER)
 
 @Serializable
-enum class HistoryKind { MOVIE, SHOW, MUSIC, YOUTUBE, APP }
+enum class HistoryKind { MOVIE, SHOW, MUSIC, YOUTUBE, APP, VIDEO }
 
 /**
  * One thing opened from My TV. [ref] identifies it within its [kind] (title id, playlist id, video id or package);
@@ -42,15 +42,26 @@ class WatchHistory(private val file: File, private val clock: () -> Long = Syste
 
     @Synchronized fun record(entry: HistoryEntry, keepDays: Int = this.keepDays) {
         val stamped = entry.copy(at = clock())
-        save(fresh(listOf(stamped) + state.value.filterNot { it.kind == entry.kind && it.ref == entry.ref }, keepDays))
+        // Something opened from My TV and then reported as playing by its app is one entry: keep the richer one
+        // (its link and poster) and only move it to the top.
+        val same = state.value.firstOrNull { it.sameAs(entry) }
+        val merged = if (same != null && entry.url == null && same.url != null)
+            same.copy(at = stamped.at, poster = same.poster ?: entry.poster) else stamped.copy(poster = stamped.poster ?: same?.poster)
+        save(fresh(listOf(merged) + state.value.filterNot { it.sameAs(entry) }, keepDays))
     }
+
+    private fun HistoryEntry.sameAs(other: HistoryEntry) = (kind == other.kind && ref == other.ref) ||
+        (pkg == other.pkg && name.equals(other.name, ignoreCase = true) && kind != HistoryKind.APP && other.kind != HistoryKind.APP)
 
     @Synchronized fun prune(keepDays: Int) {
         val kept = fresh(state.value, keepDays)
         if (kept.size != state.value.size) save(kept)
     }
 
-    @Synchronized fun clear() = save(emptyList())
+    @Synchronized fun clear() {
+        save(emptyList())
+        runCatching { File(file.parentFile, "history_art").deleteRecursively() }
+    }
 
     private fun fresh(list: List<HistoryEntry>, keepDays: Int): List<HistoryEntry> {
         if (keepDays == FOREVER) return list.take(MAX_ENTRIES)
@@ -60,7 +71,7 @@ class WatchHistory(private val file: File, private val clock: () -> Long = Syste
 
     private fun load(): List<HistoryEntry> =
         runCatching { if (file.exists()) json.decodeFromString<List<HistoryEntry>>(file.readText()) else emptyList() }
-            .getOrDefault(emptyList())
+            .getOrDefault(emptyList()).filterNot { it.kind == HistoryKind.APP }  // app opens are no longer history
 
     private fun save(list: List<HistoryEntry>) {
         state.value = list

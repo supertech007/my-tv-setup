@@ -18,8 +18,6 @@ fun Playlist.historyEntry(musicApp: String) = HistoryEntry(HistoryKind.MUSIC, id
 fun YtVideo.historyEntry() = HistoryEntry(HistoryKind.YOUTUBE, id, title, channel, thumb, "org.smarttube.stable",
     "https://www.youtube.com/watch?v=$id")
 
-fun appHistoryEntry(pkg: String, label: String) = HistoryEntry(HistoryKind.APP, pkg, label, "App", null, pkg, null)
-
 /** "Today", "Yesterday" or a date such as "Mon, 9 Nov": how History groups what was opened. */
 fun historyDay(at: Long, today: LocalDate, zone: ZoneId = ZoneId.systemDefault()): String {
     val day = Instant.ofEpochMilli(at).atZone(zone).toLocalDate()

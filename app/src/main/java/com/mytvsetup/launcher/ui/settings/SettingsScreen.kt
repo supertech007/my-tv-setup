@@ -117,6 +117,10 @@ private fun HistorySettings(prefs: Prefs, update: ((Prefs) -> Prefs) -> Unit, on
             selected = prefs.historyDays == days) { update { it.copy(historyDays = days) } }
     }
     SettingsText("Older entries are removed automatically. Find History on the dock.", muted = true)
+    val tracking = com.mytvsetup.launcher.history.NowPlayingListener.isAllowed(LocalContext.current)
+    SettingsText(if (tracking) "Recording what plays in every app: on." else "To record what plays in every app " +
+        "(YouTube in SmartTube, Prime Video, JioHotstar…), switch on TV Settings → Apps → Special app access → " +
+        "Notification access → My TV history.", muted = tracking)
     Spacer(Modifier.height(28.dp))
     SettingsAction("Clear history", Modifier.width(480.dp), onClick = onClear)
 }

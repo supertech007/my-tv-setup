@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">My TV</string>
     <string name="welcome">Welcome</string>
+    <string name="now_playing_label">My TV history</string>
     <string name="mute_service_label">My TV remote shortcuts</string>
     <string name="mute_service_description">In any app, hold Back for a second to open a small menu: Mute or Unmute, and Screen off (the LG picture goes off while sound keeps playing; any button brings it back). Only remote button presses are used; nothing on screen is read.</string>
 </resources>

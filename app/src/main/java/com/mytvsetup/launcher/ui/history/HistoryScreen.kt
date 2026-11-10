@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -32,13 +33,17 @@ import java.time.LocalDate
 
 /** Everything opened from My TV, newest first and grouped by day. OK opens it again; Clear empties the list. */
 @Composable
-fun HistoryScreen(history: WatchHistory, keepDays: Int, imageLoader: ImageLoader, onOpen: (HistoryEntry) -> Unit,
-                  onBack: () -> Unit) {
+fun HistoryScreen(history: WatchHistory, keepDays: Int, imageLoader: ImageLoader, tracking: Boolean,
+                  onOpen: (HistoryEntry) -> Unit, onBack: () -> Unit) {
     val entries by history.entries.collectAsState()
     var confirmClear by remember { mutableStateOf(false) }
     val first = remember { FocusRequester() }
     val today = remember { LocalDate.now() }
-    val days = remember(entries) { entries.groupBy { historyDay(it.at, today) }.toList() }
+    var byApp by remember { mutableStateOf(false) }
+    val pm = LocalContext.current.packageManager
+    val groups = remember(entries, byApp) {
+        if (byApp) entries.groupBy { appLabel(pm, it.pkg) }.toList() else entries.groupBy { historyDay(it.at, today) }.toList()
+    }
     BackHandler { onBack() }
     LaunchedEffect(entries.isEmpty()) { runCatching { first.requestFocus() } }
     GlassCard(Modifier.offset(40.dp, 36.dp).size(1840.dp, 1008.dp), false) {
@@ -49,17 +54,25 @@ fun HistoryScreen(history: WatchHistory, keepDays: Int, imageLoader: ImageLoader
                     Text("${entries.size} opened · kept for ${keepDaysLabel(keepDays).lowercase()} · Back to close",
                         fontFamily = Outfit, fontSize = 20.sp, color = Color.White.copy(alpha = .7f))
                 }
-                if (entries.isNotEmpty()) Chip("Clear history") { confirmClear = true }
+                if (entries.isNotEmpty()) {
+                    Chip("By time", selected = !byApp) { byApp = false }
+                    Spacer(Modifier.width(12.dp))
+                    Chip("By app", selected = byApp) { byApp = true }
+                    Spacer(Modifier.width(28.dp))
+                    Chip("Clear history") { confirmClear = true }
+                }
                 Spacer(Modifier.width(12.dp))
                 Chip("Back home", modifier = if (entries.isEmpty()) Modifier.focusRequester(first) else Modifier) { onBack() }
             }
-            if (entries.isEmpty()) Text("Nothing yet. Movies, shows, music, YouTube videos and apps you open from " +
-                "My TV will show up here.", Modifier.padding(top = 60.dp), fontFamily = Outfit, fontSize = 28.sp,
+            if (!tracking) Text("To include everything you play in any app, switch on TV Settings → Apps → Special app " +
+                "access → Notification access → My TV history.", Modifier.padding(top = 10.dp), fontFamily = Outfit,
+                fontSize = 18.sp, color = Color(0xFFFFD27A))
+            if (entries.isEmpty()) Text("Nothing yet. Movies, shows, videos and music you play will show up here.", Modifier.padding(top = 60.dp), fontFamily = Outfit, fontSize = 28.sp,
                 color = Color.White.copy(alpha = .85f))
             else LazyVerticalGrid(GridCells.Adaptive(300.dp), Modifier.fillMaxSize().padding(top = 16.dp),
                 contentPadding = PaddingValues(12.dp, 12.dp), horizontalArrangement = Arrangement.spacedBy(26.dp),
                 verticalArrangement = Arrangement.spacedBy(22.dp)) {
-                days.forEachIndexed { dayIndex, (day, items) ->
+                groups.forEachIndexed { dayIndex, (day, items) ->
                     item(key = "day:$day", span = { GridItemSpan(maxLineSpan) }) {
                         Text(day, Modifier.padding(top = if (dayIndex == 0) 0.dp else 14.dp), fontFamily = Outfit,
                             fontSize = 26.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
@@ -95,7 +108,10 @@ private fun HistoryTile(entry: HistoryEntry, imageLoader: ImageLoader, modifier:
     }
 }
 
+private fun appLabel(pm: android.content.pm.PackageManager, pkg: String) =
+    runCatching { pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString() }.getOrDefault(pkg)
+
 private fun kindLabel(kind: HistoryKind) = when (kind) {
     HistoryKind.MOVIE -> "MOVIE"; HistoryKind.SHOW -> "SERIES"; HistoryKind.MUSIC -> "MUSIC"
-    HistoryKind.YOUTUBE -> "YOUTUBE"; HistoryKind.APP -> "APP"
+    HistoryKind.YOUTUBE -> "YOUTUBE"; HistoryKind.APP -> "APP"; HistoryKind.VIDEO -> "WATCHED"
 }

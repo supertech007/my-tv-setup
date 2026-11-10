@@ -87,3 +87,39 @@ class HistoryLabelsTest {
         assertEquals(listOf("7 days", "30 days", "90 days", "1 year", "Forever"), KEEP_DAY_CHOICES.map(::keepDaysLabel))
     }
 }
+
+class NowPlayingTest {
+    @get:Rule val temporary = TemporaryFolder()
+
+    @Test fun aSmartTubeVideoBecomesAReplayableYouTubeEntry() {
+        val e = nowPlayingEntry("org.smarttube.stable", "SmartTube", "Me at the zoo", "jawed", "jNQXAC9IVRw", null)!!
+        assertEquals(HistoryKind.YOUTUBE, e.kind)
+        assertEquals("jawed · SmartTube", e.detail)
+        assertEquals("https://www.youtube.com/watch?v=jNQXAC9IVRw", e.url)
+    }
+
+    @Test fun otherAppsGiveTheTitleNotTheApp() {
+        val e = nowPlayingEntry("com.amazon.amazonvideo.livingroom", "Prime Video", "Panchayat", "S3 E4", null, "https://img/x.jpg")!!
+        assertEquals(HistoryKind.VIDEO, e.kind)
+        assertEquals("Panchayat", e.name)
+        assertEquals("S3 E4 · Prime Video", e.detail)
+        assertNull(e.url)
+        assertEquals(HistoryKind.MUSIC, nowPlayingEntry("com.jio.media.jiobeats", "JioSaavn", "Kesariya", "Arijit Singh", null, null)!!.kind)
+    }
+
+    @Test fun noTitleOrOnlyTheAppNameIsSkipped() {
+        assertNull(nowPlayingEntry("org.smarttube.stable", "SmartTube", null, null, null, null))
+        assertNull(nowPlayingEntry("org.smarttube.stable", "SmartTube", "  ", null, null, null))
+        assertNull(nowPlayingEntry("com.sonyliv", "Sony LIV", "Sony LIV", null, null, null))
+    }
+
+    @Test fun aTitleOpenedFromMyTvAndThenReportedPlayingStaysOneEntryWithItsLink() {
+        val h = WatchHistory(temporary.root.resolve("h.json")) { 5_000 }
+        val opened = HistoryEntry(HistoryKind.MOVIE, "tm1", "Panchayat", "Prime Video", "https://p/1.jpg",
+            "com.amazon.amazonvideo.livingroom", "https://watch/1")
+        h.record(opened, 30)
+        h.record(nowPlayingEntry("com.amazon.amazonvideo.livingroom", "Prime Video", "Panchayat", null, null, null)!!, 30)
+        assertEquals(1, h.entries.value.size)
+        assertEquals("https://watch/1", h.entries.value.single().url)
+    }
+}

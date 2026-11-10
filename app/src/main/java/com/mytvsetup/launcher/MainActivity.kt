@@ -69,6 +69,11 @@ class MainActivity : ComponentActivity() {
             }
             RemoteShortcuts.Action.MOVE -> menu?.show(Mute.isMuted(this), shortcuts.selected)
             RemoteShortcuts.Action.CLOSE_MENU -> closeMenu()
+            RemoteShortcuts.Action.BACK -> {
+                // The held-back press and this release, delivered together as one ordinary Back.
+                super.dispatchKeyEvent(KeyEvent.changeAction(event, KeyEvent.ACTION_DOWN))
+                super.dispatchKeyEvent(event)
+            }
             RemoteShortcuts.Action.CHOOSE -> {
                 closeMenu()
                 QuickMenuChoice.choose(this, shortcuts.selected) { nav.push(Screen.ScreenOff) }

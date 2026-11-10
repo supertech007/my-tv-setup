@@ -11,16 +11,28 @@ class RemoteShortcutsTest {
     private val ok = 23
 
     private fun holdBack(r: RemoteShortcuts, at: Long = 1_000) {
-        assertEquals(PASS, r.onKey(back, true, 0, at, at))
+        assertEquals(CONSUME, r.onKey(back, true, 0, at, at))
         assertEquals(CONSUME, r.onKey(back, true, 1, at + 400, at))
         assertEquals(OPEN_MENU, r.onKey(back, true, 5, at + 900, at))
         assertEquals(CONSUME, r.onKey(back, false, 0, at + 1_000, at)) // no Back in the app behind
     }
 
     @Test fun aShortBackIsStillBack() {
+        // The press is held back until we know it is short, then a whole Back is sent: the app never sees half
+        // of one. Passing the press and swallowing the release left apps (SmartTube) with Back stuck down,
+        // repeating, and ignoring OK (seen on the TV, 4 Nov 2026).
         val r = RemoteShortcuts()
-        assertEquals(PASS, r.onKey(back, true, 0, 1_000, 1_000))
-        assertEquals(PASS, r.onKey(back, false, 0, 1_150, 1_000))
+        assertEquals(CONSUME, r.onKey(back, true, 0, 1_000, 1_000))
+        assertEquals(BACK, r.onKey(back, false, 0, 1_150, 1_000))
+    }
+
+    @Test fun aShortBackAfterTheMenuIsBackAgain() {
+        val r = RemoteShortcuts()
+        holdBack(r)  // every Back event of the hold is kept from the app
+        r.onKey(back, true, 0, 3_000, 3_000); r.onKey(back, false, 0, 3_100, 3_000)  // closes the menu
+        assertEquals(CONSUME, r.onKey(back, true, 0, 5_000, 5_000))
+        assertEquals(BACK, r.onKey(back, false, 0, 5_150, 5_000))
+        assertEquals(PASS, r.onKey(ok, true, 0, 6_000, 6_000))
     }
 
     @Test fun holdingBackOpensTheQuickMenuOnTheFirstItem() {
@@ -72,14 +84,14 @@ class RemoteShortcutsTest {
 
     @Test fun androidsLongPressFlagAlsoOpensTheMenu() {
         val r = RemoteShortcuts()
-        assertEquals(PASS, r.onKey(back, true, 0, 1_000, 1_000))
+        assertEquals(CONSUME, r.onKey(back, true, 0, 1_000, 1_000))
         assertEquals(OPEN_MENU, r.onKey(back, true, 1, 1_000, 1_000, longPress = true))
     }
 
     @Test fun aTimedHoldOpensTheMenuWhenNoRepeatsArrive() {
         // The accessibility helper only sees press and release (checked on the TV).
         val r = RemoteShortcuts()
-        assertEquals(PASS, r.onKey(back, true, 0, 1_000, 1_000))
+        assertEquals(CONSUME, r.onKey(back, true, 0, 1_000, 1_000))
         assertEquals(OPEN_MENU, r.onBackHoldTimer())
         assertEquals(CONSUME, r.onKey(back, false, 0, 1_900, 1_000))
         assertEquals(MOVE, r.onKey(down, true, 0, 3_000, 3_000))
@@ -88,7 +100,7 @@ class RemoteShortcutsTest {
     @Test fun aReleasedBackDoesNotOpenTheMenuWhenTheTimerFires() {
         val r = RemoteShortcuts()
         r.onKey(back, true, 0, 1_000, 1_000)
-        assertEquals(PASS, r.onKey(back, false, 0, 1_200, 1_000))
+        assertEquals(BACK, r.onKey(back, false, 0, 1_200, 1_000))
         assertEquals(PASS, r.onBackHoldTimer())
     }
 }

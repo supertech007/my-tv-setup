@@ -6,11 +6,13 @@ import android.view.KeyEvent
  * One-hand remote shortcuts. The stick sends the volume buttons straight to the TV over HDMI (no app sees them),
  * holding an arrow scrolls lists, and the Mi remote cannot be pressed two-handed comfortably, so everything starts
  * from Back: hold it about a second to open a small quick menu (Mute or Unmute, Screen off), move with the arrows,
- * choose with OK, close with Back. A short Back stays a normal Back. While the screen is off, the next button only
+ * choose with OK, close with Back. A short Back stays a normal Back: the app gets none of the press until it is
+ * released, then a whole Back ([Action.BACK]). Half a Back (press passed, release kept) leaves apps with Back stuck
+ * down, and SmartTube then ignored OK. While the screen is off, the next button only
  * brings the picture back. Pure logic, shared by the launcher and the accessibility helper for other apps.
  */
 class RemoteShortcuts(val holdMs: Long = 800, private val items: Int = 2) {
-    enum class Action { PASS, CONSUME, OPEN_MENU, MOVE, CHOOSE, CLOSE_MENU, SCREEN_ON }
+    enum class Action { PASS, CONSUME, OPEN_MENU, MOVE, CHOOSE, CLOSE_MENU, SCREEN_ON, BACK }
 
     var screenIsOff = false
     var menuOpen = false
@@ -32,16 +34,14 @@ class RemoteShortcuts(val holdMs: Long = 800, private val items: Int = 2) {
         }
         if (menuOpen) return onMenu(keyCode, isDown)
         if (keyCode != KeyEvent.KEYCODE_BACK) return Action.PASS
-        // Apps act on Back when it is released, so the press goes through and only the release is held back
-        // once the hold has opened the menu.
         return when {
-            isDown && repeat == 0 -> { backUsed = false; backDown = true; Action.PASS }
+            isDown && repeat == 0 -> { backUsed = false; backDown = true; Action.CONSUME }
             // Android flags a long press itself on some remotes; otherwise time the hold.
             isDown && !backUsed && (longPress || eventTime - downTime >= holdMs) -> {
                 backUsed = true; menuOpen = true; selected = 0; Action.OPEN_MENU
             }
             isDown -> Action.CONSUME
-            else -> { backDown = false; if (backUsed) Action.CONSUME else Action.PASS }
+            else -> { backDown = false; if (backUsed) Action.CONSUME else Action.BACK }
         }
     }
 

@@ -4,6 +4,7 @@ import android.accessibilityservice.AccessibilityService
 import android.graphics.PixelFormat
 import android.os.Handler
 import android.os.Looper
+import android.view.KeyCharacterMap
 import android.view.KeyEvent
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
@@ -20,6 +21,8 @@ class MuteKeyService : AccessibilityService() {
     private var menu: QuickMenuView? = null
 
     override fun onKeyEvent(event: KeyEvent): Boolean {
+        // The Back this helper sends itself comes from the virtual keyboard; let it through untouched.
+        if (event.deviceId == KeyCharacterMap.VIRTUAL_KEYBOARD) return false
         val action = shortcuts.onKey(event.keyCode, event.action == KeyEvent.ACTION_DOWN, event.repeatCount,
             event.eventTime, event.downTime, event.isLongPress)
         if (event.keyCode == KeyEvent.KEYCODE_BACK) {
@@ -46,6 +49,7 @@ class MuteKeyService : AccessibilityService() {
                 }
             }
             Action.SCREEN_ON -> LgTv.get(this).screenOnLater()
+            Action.BACK -> performGlobalAction(GLOBAL_ACTION_BACK)
             else -> Unit
         }
     }

@@ -53,6 +53,7 @@ fun SettingsScreen(prefs: Prefs, installed: List<AppEntry>, onUpdate: ((Prefs) -
                     selected = section == label) { section = label }
             }
             Spacer(Modifier.weight(1f))
+            SettingsAction("TV settings") { openSystemScreen(context, android.provider.Settings.ACTION_SETTINGS) }
             SettingsAction("Back home", onClick = onBack)
         }
     }
@@ -117,10 +118,14 @@ private fun HistorySettings(prefs: Prefs, update: ((Prefs) -> Prefs) -> Unit, on
             selected = prefs.historyDays == days) { update { it.copy(historyDays = days) } }
     }
     SettingsText("Older entries are removed automatically. Find History on the dock.", muted = true)
-    val tracking = com.mytvsetup.launcher.history.NowPlayingListener.isAllowed(LocalContext.current)
+    val context = LocalContext.current
+    val tracking = com.mytvsetup.launcher.history.NowPlayingListener.isAllowed(context)
     SettingsText(if (tracking) "Recording what plays in every app: on." else "To record what plays in every app " +
-        "(YouTube in SmartTube, Prime Video, JioHotstar…), switch on TV Settings → Apps → Special app access → " +
-        "Notification access → My TV history.", muted = tracking)
+        "(YouTube in SmartTube, Prime Video, JioHotstar…), open Notification access below and switch on My TV history.",
+        muted = tracking)
+    SettingsAction("Open Notification access", Modifier.width(480.dp)) {
+        openSystemScreen(context, android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+    }
     Spacer(Modifier.height(28.dp))
     SettingsAction("Clear history", Modifier.width(480.dp), onClick = onClear)
 }
@@ -185,3 +190,10 @@ private fun MusicAppSettings(prefs: Prefs, installed: List<AppEntry>, update: ((
 }
 
 private fun Set<String>.toggle(value: String) = if (value in this) this - value else this + value
+
+/** Opens a screen of the TV's own Settings app; My TV, as the Home app, is otherwise the only way in. */
+internal fun openSystemScreen(context: android.content.Context, action: String) {
+    runCatching { context.startActivity(Intent(action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        .recoverCatching { context.startActivity(Intent(android.provider.Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        .onFailure { Toast.makeText(context, "TV settings couldn't be opened", Toast.LENGTH_LONG).show() }
+}

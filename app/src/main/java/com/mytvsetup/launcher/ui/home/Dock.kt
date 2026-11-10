@@ -4,7 +4,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import kotlinx.coroutines.launch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -52,11 +54,28 @@ fun Dock(installed: List<AppEntry>, prefs: Prefs, modifier: Modifier, onApp: (Ap
         current.copy(dockOrder = moveInDock(
             dockIds(dockApps(installed, current.dockOrder, current.hiddenApps).map { it.pkg }, current.dockOrder), id, delta))
     }
+    // The dock goes round: Left on the first tile lands on the last, Right on the last back on the first.
+    val list = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    val tiles = remember { mutableMapOf<String, FocusRequester>() }
+    fun jump(index: Int) = scope.launch {
+        list.scrollToItem(index)
+        repeat(3) { withFrameNanos { } }
+        runCatching { tiles[ids[index]]?.requestFocus() }
+    }
     GlassCard(modifier.onFocusChanged { focused = it.hasFocus }, focused) {
-        LazyRow(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 44.dp, vertical = 53.dp),
+        LazyRow(Modifier.fillMaxSize(), state = list, contentPadding = PaddingValues(horizontal = 44.dp, vertical = 53.dp),
             horizontalArrangement = Arrangement.spacedBy(30.dp), verticalAlignment = Alignment.CenterVertically) {
-            items(ids, key = { it }) { id ->
+            itemsIndexed(ids, key = { _, it -> it }) { index, id ->
                 val app = byId[id]
+                val wrap = Modifier.focusRequester(tiles.getOrPut(id) { FocusRequester() }).onPreviewKeyEvent { event ->
+                    if (editing != null || event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                    when {
+                        event.key == Key.DirectionLeft && index == 0 && ids.size > 1 -> { jump(ids.lastIndex); true }
+                        event.key == Key.DirectionRight && index == ids.lastIndex && ids.size > 1 -> { jump(0); true }
+                        else -> false
+                    }
+                }
                 val (label, open) = when (id) {
                     ALL_APPS -> "All apps" to onAllApps
                     HISTORY -> "History" to onHistory
@@ -65,7 +84,7 @@ fun Dock(installed: List<AppEntry>, prefs: Prefs, modifier: Modifier, onApp: (Ap
                     SETTINGS -> "Settings" to onSettings
                     else -> app!!.label to { onApp(app) }
                 }
-                DockItem(id, label, width = if (app != null) 250 else 170, editing = editing == id,
+                DockItem(id, label, wrap, width = if (app != null) 250 else 170, editing = editing == id,
                     removable = app != null, focused = focused, onOpen = open, onHold = { editing = id },
                     onMove = { move(id, it) },
                     onRemove = { editing = null; update { it.copy(hiddenApps = it.hiddenApps + id) } }) {
@@ -77,7 +96,7 @@ fun Dock(installed: List<AppEntry>, prefs: Prefs, modifier: Modifier, onApp: (Ap
 }
 
 @Composable
-private fun DockItem(id: String, label: String, width: Int, editing: Boolean, removable: Boolean, focused: Boolean,
+private fun DockItem(id: String, label: String, tileModifier: Modifier, width: Int, editing: Boolean, removable: Boolean, focused: Boolean,
                      onOpen: () -> Unit, onHold: () -> Unit, onMove: (Int) -> Unit, onRemove: () -> Unit,
                      art: @Composable BoxScope.() -> Unit) {
     val tile = remember { FocusRequester() }
@@ -89,7 +108,7 @@ private fun DockItem(id: String, label: String, width: Int, editing: Boolean, re
         wasEditing = editing
     }
     Box(Modifier.size(width.dp, 150.dp)) {
-        RemoteTile(Modifier.fillMaxSize().focusRequester(tile).focusProperties { canFocus = !editing },
+        RemoteTile(Modifier.fillMaxSize().then(tileModifier).focusRequester(tile).focusProperties { canFocus = !editing },
             onClick = onOpen, onHold = onHold) {
             art()
             if (editing) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .55f)))
